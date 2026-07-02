@@ -19,6 +19,13 @@ class DashboardScreen extends ConsumerWidget {
     final trackingState = ref.watch(trackingViewModelProvider);
     final trackingViewModel = ref.read(trackingViewModelProvider.notifier);
 
+    // Reload the dashboard on every tracking sample so the total climbs live.
+    ref.listen(trackingViewModelProvider, (previous, next) {
+      if (next.status.lastUpdatedAt != previous?.status.lastUpdatedAt) {
+        dashboardViewModel.refreshSilently();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('FocusTrace'),

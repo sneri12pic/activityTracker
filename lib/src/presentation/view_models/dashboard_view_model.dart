@@ -64,8 +64,12 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   final UsageRepository _usageRepository;
   final UsageAggregationService _aggregationService;
 
-  Future<void> loadTodayUsage() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> loadTodayUsage({bool showLoading = true}) async {
+    // ponytail: showLoading=false skips the spinner so the 5s auto-refresh
+    // doesn't flicker the dashboard while tracking.
+    if (showLoading) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
     try {
       final hasAccess = await _usageRepository.hasUsageAccess();
       if (state.platform == UsagePlatform.android && !hasAccess) {
@@ -93,6 +97,8 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   }
 
   Future<void> refresh() => loadTodayUsage();
+
+  Future<void> refreshSilently() => loadTodayUsage(showLoading: false);
 
   Future<void> checkPermission() async {
     final hasAccess = await _usageRepository.hasUsageAccess();
