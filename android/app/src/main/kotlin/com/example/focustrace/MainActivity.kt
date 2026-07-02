@@ -1,7 +1,7 @@
 package com.example.focustrace
 
 import android.app.AppOpsManager
-import android.app.usage.UsageStats
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -77,6 +77,7 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun getTodayUsageStats(): List<Map<String, Any>> {
         val usageStatsManager =
             getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -88,24 +89,53 @@ class MainActivity : FlutterActivity() {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        return usageStatsManager
-            .queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startOfToday, now)
-            .orEmpty()
-            .filter { it.totalTimeInForeground > 0L }
-            .groupBy { it.packageName }
-            .map { (packageName, usageStats) -> usageStats.toUsageSummary(packageName) }
-            .sortedByDescending { it["totalTimeInForegroundMs"] as Long }
-    }
+        val totals = HashMap<String, Long>()
+        val foregroundSince = HashMap<String, Long>()
+        val lastUsed = HashMap<String, Long>()
 
-    private fun List<UsageStats>.toUsageSummary(packageName: String): Map<String, Any> {
-        return mapOf(
-            "packageName" to packageName,
-            "appName" to appLabelFor(packageName),
-            "totalTimeInForegroundMs" to sumOf { it.totalTimeInForeground },
-            "firstTimeStampMs" to minOf { it.firstTimeStamp },
-            "lastTimeStampMs" to maxOf { it.lastTimeStamp },
-            "lastTimeUsedMs" to maxOf { it.lastTimeUsed }
-        )
+        val events = usageStatsManager.queryEvents(startOfToday, now)
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val packageName = event.packageName ?: continue
+            when (event.eventType) {
+                UsageEvents.Event.MOVE_TO_FOREGROUND -> {
+                    foregroundSince[packageName] = event.timeStamp
+                    lastUsed[packageName] = event.timeStamp
+                }
+                UsageEvents.Event.MOVE_TO_BACKGROUND -> {
+                    val start = foregroundSince.remove(packageName)
+                    if (start != null && event.timeStamp > start) {
+                        totals[packageName] =
+                            (totals[packageName] ?: 0L) + (event.timeStamp - start)
+                    }
+                    lastUsed[packageName] = event.timeStamp
+                }
+            }
+        }
+
+        // Apps still in the foreground at query time have no closing event.
+        for ((packageName, start) in foregroundSince) {
+            if (now > start) {
+                totals[packageName] = (totals[packageName] ?: 0L) + (now - start)
+                lastUsed[packageName] = now
+            }
+        }
+
+        return totals
+            .filter { it.value > 0L }
+            .map { (packageName, totalMs) ->
+                val lastUsedMs = lastUsed[packageName] ?: now
+                mapOf(
+                    "packageName" to packageName,
+                    "appName" to appLabelFor(packageName),
+                    "totalTimeInForegroundMs" to totalMs,
+                    "firstTimeStampMs" to startOfToday,
+                    "lastTimeStampMs" to lastUsedMs,
+                    "lastTimeUsedMs" to lastUsedMs
+                )
+            }
+            .sortedByDescending { it["totalTimeInForegroundMs"] as Long }
     }
 
     private fun appLabelFor(packageName: String): String {

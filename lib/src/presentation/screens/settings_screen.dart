@@ -64,7 +64,12 @@ class SettingsScreen extends ConsumerWidget {
                   value: state.trackingIntervalSeconds,
                   min: 1,
                   max: 3600,
-                  onChanged: viewModel.updateTrackingInterval,
+                  onChanged: (seconds) async {
+                    await viewModel.updateTrackingInterval(seconds);
+                    await ref
+                        .read(trackingViewModelProvider.notifier)
+                        .updateTrackingInterval(seconds);
+                  },
                 ),
                 const Divider(height: 1),
                 _NumberSettingTile(
@@ -73,7 +78,12 @@ class SettingsScreen extends ConsumerWidget {
                   value: state.idleTimeoutSeconds,
                   min: 5,
                   max: 86400,
-                  onChanged: viewModel.updateIdleTimeout,
+                  onChanged: (seconds) async {
+                    await viewModel.updateIdleTimeout(seconds);
+                    await ref
+                        .read(trackingViewModelProvider.notifier)
+                        .updateIdleTimeout(seconds);
+                  },
                 ),
               ],
             ),

@@ -164,5 +164,5 @@ class _ScaleRingPainter extends CustomPainter {
 }
 
 double _clamp(double value, double min, double max) {
-  return value.clamp(min, max).toDouble();
+  return value.clamp(min, math.max(min, max)).toDouble();
 }
