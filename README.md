@@ -7,7 +7,8 @@ The MVP supports:
 - Android usage summaries through Android Usage Access and `UsageStatsManager`
 - Windows active-window tracking while the app is open
 - Local SQLite storage for usage sessions and settings
-- A dashboard for today's tracked usage
+- A dashboard for today's tracked usage, including a usage bubble chart where bigger bubbles mean more time spent
+- A settings screen to configure the Windows tracking interval and idle timeout, and to clear local data
 
 FocusTrace does not implement hidden monitoring, keylogging, screenshots, clipboard reading, browser history reading, or content monitoring.
 
@@ -36,7 +37,7 @@ Windows tracking is manual and session-based:
 
 1. Open FocusTrace.
 2. Press **Start Tracking**.
-3. FocusTrace periodically reads the foreground window title and process name.
+3. FocusTrace periodically reads the foreground window title and process name. The polling interval (default 5 seconds) and idle timeout (default 60 seconds) can be changed on the Settings screen.
 4. Press **Stop Tracking** to end the current session.
 
 Tracking stops when the app is closed. Background startup and tray tracking are not implemented in the MVP.
@@ -69,14 +70,13 @@ flutter test
 
 ## Privacy
 
-All usage data is stored locally in SQLite on the device. FocusTrace does not send tracked data to a server and does not include sync in the MVP. Clearing local data removes stored usage sessions and settings from the local database.
+All usage data is stored locally in SQLite on the device. FocusTrace does not send tracked data to a server and does not include sync in the MVP. **Clear Local Data** on the Settings screen removes stored usage sessions and settings from the local database.
 
 ## Roadmap
 
 - macOS support using `NSWorkspace.frontmostApplication`
 - iOS support using Screen Time APIs where possible
 - App categories
-- Charts
 - Weekly and monthly reports
 - Local export to CSV
 - Optional encrypted sync later
