@@ -5,6 +5,12 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Needed on Android 11+ to resolve app labels and launch intents
+         for other packages (otherwise names show as raw package names). -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:label="FocusTrace"
         android:name="${applicationName}"

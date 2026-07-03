@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class AppUsageSummary {
   const AppUsageSummary({
     required this.appName,
@@ -6,6 +8,7 @@ class AppUsageSummary {
     this.packageName,
     this.processName,
     this.lastUsedAt,
+    this.iconBytes,
   });
 
   final String appName;
@@ -14,6 +17,7 @@ class AppUsageSummary {
   final int totalDurationSeconds;
   final double percentageOfTotal;
   final DateTime? lastUsedAt;
+  final Uint8List? iconBytes;
 
   String get appKey => packageName ?? processName ?? appName;
 
@@ -26,6 +30,7 @@ class AppUsageSummary {
     int? totalDurationSeconds,
     double? percentageOfTotal,
     DateTime? lastUsedAt,
+    Uint8List? iconBytes,
   }) {
     return AppUsageSummary(
       appName: appName ?? this.appName,
@@ -34,6 +39,7 @@ class AppUsageSummary {
       totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
       percentageOfTotal: percentageOfTotal ?? this.percentageOfTotal,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+      iconBytes: iconBytes ?? this.iconBytes,
     );
   }
 

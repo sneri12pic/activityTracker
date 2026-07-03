@@ -73,14 +73,26 @@ class _BubbleContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _iconFor(item.name);
     final iconSize = (radius * 0.58).clamp(18.0, 34.0);
     final labelSize = (radius * 0.34).clamp(11.0, 19.0);
+    final iconBytes = item.iconBytes;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white, size: iconSize),
+        if (iconBytes != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(iconSize * 0.28),
+            child: Image.memory(
+              iconBytes,
+              width: iconSize * 1.3,
+              height: iconSize * 1.3,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+            ),
+          )
+        else
+          Icon(_iconFor(item.name), color: Colors.white, size: iconSize),
         if (radius >= 34) ...[
           const SizedBox(height: 3),
           Padding(

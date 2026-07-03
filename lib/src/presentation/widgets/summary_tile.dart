@@ -23,14 +23,25 @@ class SummaryTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  child: Text(
-                    summary.appName.isEmpty
-                        ? '?'
-                        : summary.appName[0].toUpperCase(),
+                if (summary.iconBytes != null)
+                  ClipOval(
+                    child: Image.memory(
+                      summary.iconBytes!,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                    ),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 18,
+                    child: Text(
+                      summary.appName.isEmpty
+                          ? '?'
+                          : summary.appName[0].toUpperCase(),
+                    ),
                   ),
-                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

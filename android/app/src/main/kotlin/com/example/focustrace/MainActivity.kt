@@ -7,12 +7,15 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
 import java.util.Calendar
 
 class MainActivity : FlutterActivity() {
@@ -78,7 +81,7 @@ class MainActivity : FlutterActivity() {
     }
 
     @Suppress("DEPRECATION")
-    private fun getTodayUsageStats(): List<Map<String, Any>> {
+    private fun getTodayUsageStats(): List<Map<String, Any?>> {
         val usageStatsManager =
             getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val now = System.currentTimeMillis()
@@ -123,12 +126,13 @@ class MainActivity : FlutterActivity() {
         }
 
         return totals
-            .filter { it.value > 0L }
+            .filter { it.value > 0L && isUserFacingApp(it.key) }
             .map { (packageName, totalMs) ->
                 val lastUsedMs = lastUsed[packageName] ?: now
                 mapOf(
                     "packageName" to packageName,
                     "appName" to appLabelFor(packageName),
+                    "iconBytes" to appIconFor(packageName),
                     "totalTimeInForegroundMs" to totalMs,
                     "firstTimeStampMs" to startOfToday,
                     "lastTimeStampMs" to lastUsedMs,
@@ -136,6 +140,31 @@ class MainActivity : FlutterActivity() {
                 )
             }
             .sortedByDescending { it["totalTimeInForegroundMs"] as Long }
+    }
+
+    // ponytail: launchable-in-app-drawer is the system-app filter; whitelist packages here if a wanted app gets dropped.
+    private fun isUserFacingApp(packageName: String): Boolean {
+        return packageManager.getLaunchIntentForPackage(packageName) != null
+    }
+
+    private val iconCache = HashMap<String, ByteArray?>()
+
+    private fun appIconFor(packageName: String): ByteArray? {
+        return iconCache.getOrPut(packageName) {
+            try {
+                val drawable = packageManager.getApplicationIcon(packageName)
+                val size = 128
+                val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+                drawable.setBounds(0, 0, size, size)
+                drawable.draw(Canvas(bitmap))
+                val out = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                bitmap.recycle()
+                out.toByteArray()
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 
     private fun appLabelFor(packageName: String): String {

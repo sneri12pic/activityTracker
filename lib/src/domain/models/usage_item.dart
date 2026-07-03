@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'app_usage_summary.dart';
 
 class UsageItem {
@@ -9,6 +11,7 @@ class UsageItem {
     required this.category,
     required this.initials,
     this.sourceName,
+    this.iconBytes,
   });
 
   factory UsageItem.fromSummary(AppUsageSummary summary) {
@@ -20,6 +23,7 @@ class UsageItem {
       percentageOfTotal: summary.percentageOfTotal,
       category: _categoryFor(summary.appName),
       initials: _initialsFor(summary.appName),
+      iconBytes: summary.iconBytes,
     );
   }
 
@@ -30,6 +34,7 @@ class UsageItem {
   final double percentageOfTotal;
   final String category;
   final String initials;
+  final Uint8List? iconBytes;
 
   Duration get totalDuration => Duration(seconds: totalDurationSeconds);
 }

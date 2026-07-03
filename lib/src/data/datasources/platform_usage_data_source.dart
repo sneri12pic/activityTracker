@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 
 import '../../domain/models/app_usage_summary.dart';
@@ -96,6 +98,7 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
       lastUsedAt: lastUsedMs == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastUsedMs),
+      iconBytes: row['iconBytes'] as Uint8List?,
     );
   }
 }
