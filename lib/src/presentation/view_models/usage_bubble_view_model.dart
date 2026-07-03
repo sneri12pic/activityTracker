@@ -34,7 +34,8 @@ class UsageBubbleViewModel extends StateNotifier<UsageBubbleState> {
         (first, second) =>
             second.totalDurationSeconds.compareTo(first.totalDurationSeconds),
       );
-    return items;
+    // ponytail: chart layout has 10 position slots; more bubbles just overlap.
+    return items.take(10).toList();
   }
 
   UsageItem? selectedItemFor(List<UsageItem> items, String? selectedItemId) {

@@ -77,16 +77,18 @@ class BubbleChart extends StatelessWidget {
         .reduce(math.max)
         .toDouble();
     final minDimension = math.min(size.width, size.height);
-    final spread = minDimension * 0.31;
-    final center = Offset(size.width / 2, size.height / 2 + 10);
     final maxRadius = math.min(_maxRadius, minDimension * 0.2);
+    final radii = [
+      for (final item in items) _radiusFor(item, maxSeconds, maxRadius),
+    ];
+    final centers = packBubbles(radii, size);
 
     return [
       for (var index = 0; index < items.length; index++)
         _BubbleLayout(
           item: items[index],
-          radius: _radiusFor(items[index], maxSeconds, maxRadius),
-          center: _centerFor(index, center, spread, size),
+          radius: radii[index],
+          center: centers[index],
         ),
     ];
   }
@@ -97,30 +99,6 @@ class BubbleChart extends StatelessWidget {
     }
     final normalized = item.totalDurationSeconds / maxSeconds;
     return _minRadius + normalized * (maxRadius - _minRadius);
-  }
-
-  Offset _centerFor(int index, Offset center, double spread, Size size) {
-    const offsets = [
-      Offset(0, 0),
-      Offset(-0.54, -0.06),
-      Offset(0.5, 0.06),
-      Offset(0.05, -0.55),
-      Offset(-0.12, 0.54),
-      Offset(-0.58, 0.46),
-      Offset(0.6, -0.44),
-      Offset(0.66, 0.42),
-      Offset(-0.65, -0.46),
-      Offset(0.24, 0.68),
-    ];
-    final template = offsets[index % offsets.length];
-    final ring = index ~/ offsets.length;
-    final ringSpread = spread + ring * 44;
-    final dx = center.dx + template.dx * ringSpread;
-    final dy = center.dy + template.dy * ringSpread;
-    return Offset(
-      _clamp(dx, 34, size.width - 34),
-      _clamp(dy, 34, size.height - 34),
-    );
   }
 
   double _tooltipTop(_BubbleLayout layout, double height) {
@@ -165,4 +143,60 @@ class _ScaleRingPainter extends CustomPainter {
 
 double _clamp(double value, double min, double max) {
   return value.clamp(min, math.max(min, max)).toDouble();
+}
+
+const double _goldenAngle = 2.399963;
+
+/// Iterative circle packing: every bubble is pulled toward the center while
+/// colliding pairs push apart, with the displacement split by mass (radius²),
+/// so the heaviest bubbles claim the middle and light ones get pushed out.
+/// Deterministic — same radii always produce the same layout.
+List<Offset> packBubbles(List<double> radii, Size size) {
+  final center = Offset(size.width / 2, size.height / 2 + 10);
+  // Radii arrive sorted biggest-first; seed on a small spiral so the biggest
+  // starts (and stays) closest to the center.
+  final positions = [
+    for (var i = 0; i < radii.length; i++)
+      center + Offset.fromDirection(i * _goldenAngle, 10.0 + 14.0 * i),
+  ];
+
+  final maxRadius = radii.reduce(math.max);
+
+  // ponytail: fixed 150 relaxation steps for <=10 bubbles; converges long before that.
+  for (var step = 0; step < 150; step++) {
+    // Gravity fades out so late steps purely resolve collisions, and it is
+    // mass-weighted so heavy bubbles pull to the center harder than light ones.
+    final gravity = 0.04 * (1 - step / 150);
+    for (var i = 0; i < positions.length; i++) {
+      final weight = (radii[i] * radii[i]) / (maxRadius * maxRadius);
+      positions[i] += (center - positions[i]) * (gravity * (0.2 + 0.8 * weight));
+    }
+    for (var i = 0; i < positions.length; i++) {
+      for (var j = i + 1; j < positions.length; j++) {
+        var delta = positions[j] - positions[i];
+        var distance = delta.distance;
+        final minDistance = radii[i] + radii[j] + 4;
+        if (distance >= minDistance) {
+          continue;
+        }
+        if (distance < 0.01) {
+          delta = Offset.fromDirection(j * _goldenAngle, 0.01);
+          distance = 0.01;
+        }
+        final direction = delta / distance;
+        final overlap = minDistance - distance;
+        final massI = radii[i] * radii[i];
+        final massJ = radii[j] * radii[j];
+        positions[i] -= direction * (overlap * massJ / (massI + massJ));
+        positions[j] += direction * (overlap * massI / (massI + massJ));
+      }
+    }
+    for (var i = 0; i < positions.length; i++) {
+      positions[i] = Offset(
+        _clamp(positions[i].dx, radii[i], size.width - radii[i]),
+        _clamp(positions[i].dy, radii[i], size.height - radii[i]),
+      );
+    }
+  }
+  return positions;
 }
