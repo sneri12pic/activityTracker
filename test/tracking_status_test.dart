@@ -11,6 +11,18 @@ void main() {
     expect(status.errorMessage, isNull);
   });
 
+  test('copyWith keeps tracking flag while setting and clearing errors', () {
+    final active = TrackingStatus.active(UsagePlatform.windows);
+
+    final withError = active.copyWith(errorMessage: 'transient failure');
+    expect(withError.isTracking, isTrue);
+    expect(withError.errorMessage, 'transient failure');
+
+    final recovered = withError.copyWith(clearError: true);
+    expect(recovered.isTracking, isTrue);
+    expect(recovered.errorMessage, isNull);
+  });
+
   test('error status keeps message', () {
     final status = TrackingStatus.error(
       platform: UsagePlatform.unsupported,

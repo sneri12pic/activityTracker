@@ -50,16 +50,19 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
     required PlatformUsageDataSource platformDataSource,
     required UsageRepository usageRepository,
     required SettingsRepository settingsRepository,
+    DateTime Function()? clock,
   }) : _platform = platform,
        _platformDataSource = platformDataSource,
        _usageRepository = usageRepository,
        _settingsRepository = settingsRepository,
+       _clock = clock ?? DateTime.now,
        super(TrackingState.initial(platform));
 
   final UsagePlatform _platform;
   final PlatformUsageDataSource _platformDataSource;
   final UsageRepository _usageRepository;
   final SettingsRepository _settingsRepository;
+  final DateTime Function() _clock;
 
   Timer? _timer;
   DateTime? _lastSampleAt;
@@ -88,7 +91,7 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
 
     await loadSettings();
     _timer?.cancel();
-    _lastSampleAt = DateTime.now();
+    _lastSampleAt = _clock();
     state = state.copyWith(
       status: TrackingStatus.active(_platform),
       isBusy: false,
@@ -127,13 +130,21 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
     state = state.copyWith(idleTimeoutSeconds: normalized);
   }
 
+  /// A single sample may never record more than this multiple of the
+  /// sampling interval. When the timer stalls (system sleep/hibernate, a
+  /// suspended process, or a streak of failed samples) the gap since the
+  /// previous sample can span hours, and attributing it to whatever window
+  /// happens to be in the foreground afterwards would fabricate huge
+  /// sessions.
+  static const int maxSampleGapMultiplier = 2;
+
   Future<void> _sampleActiveWindow({bool force = false}) async {
     if (_platform != UsagePlatform.windows) {
       return;
     }
 
+    final now = _clock();
     try {
-      final now = DateTime.now();
       final previousSampleAt = _lastSampleAt;
       final currentInfo = await _platformDataSource.getActiveWindowInfo();
 
@@ -141,8 +152,15 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
           currentInfo != null &&
           (force || now.difference(previousSampleAt).inSeconds > 0) &&
           currentInfo.idleSeconds < state.idleTimeoutSeconds) {
-        final durationSeconds = now.difference(previousSampleAt).inSeconds;
+        final maxSampleSeconds = state.intervalSeconds * maxSampleGapMultiplier;
+        final gapSeconds = now.difference(previousSampleAt).inSeconds;
+        final durationSeconds = gapSeconds > maxSampleSeconds
+            ? maxSampleSeconds
+            : gapSeconds;
         if (durationSeconds > 0) {
+          // Keep startedAt consistent with the capped duration: aggregation
+          // measures sessions by their timestamps, not durationSeconds.
+          final startedAt = now.subtract(Duration(seconds: durationSeconds));
           await _usageRepository.insertSession(
             UsageSession(
               id: '${now.microsecondsSinceEpoch}-${currentInfo.processName}',
@@ -150,7 +168,7 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
               appName: currentInfo.appName,
               processName: currentInfo.processName,
               windowTitle: currentInfo.windowTitle,
-              startedAt: previousSampleAt,
+              startedAt: startedAt,
               endedAt: now,
               durationSeconds: durationSeconds,
               createdAt: now,
@@ -164,10 +182,15 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
         status: state.status.copyWith(lastUpdatedAt: now, clearError: true),
       );
     } catch (error) {
+      // The periodic timer is still running, so a transient failure (busy
+      // database, channel hiccup during lock/UAC, ...) must not flip
+      // isTracking to false: TrackingStatus.error would wedge the UI in a
+      // stopped state because the success path only clears the message.
+      // Surface the error, keep tracking, and recover on the next sample.
       state = state.copyWith(
-        status: TrackingStatus.error(
-          platform: _platform,
-          message: error.toString(),
+        status: state.status.copyWith(
+          lastUpdatedAt: now,
+          errorMessage: error.toString(),
         ),
       );
     }
