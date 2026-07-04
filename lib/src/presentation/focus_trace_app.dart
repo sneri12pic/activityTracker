@@ -10,7 +10,17 @@ class FocusTraceApp extends StatelessWidget {
     return MaterialApp(
       title: 'FocusTrace',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1967D2)),
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5BC0EB),
+          brightness: Brightness.dark,
+          surface: const Color(0xFF070A10),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF070A10),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF070A10),
+          foregroundColor: Colors.white,
+        ),
         useMaterial3: true,
       ),
       home: const DashboardScreen(),

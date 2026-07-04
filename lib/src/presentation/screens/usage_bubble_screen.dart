@@ -53,6 +53,7 @@ class UsageBubbleScreen extends ConsumerWidget {
                     items: items,
                     selectedItem: selectedItem,
                     onItemSelected: viewModel.selectItem,
+                    onSelectionDismissed: viewModel.clearSelection,
                   ),
                 ],
               ),

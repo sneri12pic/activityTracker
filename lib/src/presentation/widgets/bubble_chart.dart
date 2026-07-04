@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,20 +7,93 @@ import '../../domain/models/usage_item.dart';
 import 'bubble_tooltip.dart';
 import 'usage_bubble.dart';
 
-class BubbleChart extends StatelessWidget {
+class BubbleChart extends StatefulWidget {
   const BubbleChart({
     required this.items,
     required this.selectedItem,
     required this.onItemSelected,
+    required this.onSelectionDismissed,
     super.key,
   });
 
   final List<UsageItem> items;
   final UsageItem? selectedItem;
   final ValueChanged<UsageItem> onItemSelected;
+  final VoidCallback onSelectionDismissed;
 
   static const double _minRadius = 26;
   static const double _maxRadius = 72;
+
+  @override
+  State<BubbleChart> createState() => _BubbleChartState();
+}
+
+class _BubbleChartState extends State<BubbleChart>
+    with SingleTickerProviderStateMixin {
+  static const _tooltipLifetime = Duration(seconds: 4);
+  static const _tooltipFadeDuration = Duration(milliseconds: 400);
+
+  late final AnimationController _pulseController;
+  Timer? _fadeTimer;
+  Timer? _clearTimer;
+  bool _tooltipVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    if (widget.selectedItem != null) {
+      _tooltipVisible = true;
+      _fadeTimer = Timer(_tooltipLifetime, _fadeOutTooltip);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant BubbleChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedItem?.id == oldWidget.selectedItem?.id) {
+      return;
+    }
+    _cancelTimers();
+    _tooltipVisible = widget.selectedItem != null;
+    if (_tooltipVisible) {
+      _fadeTimer = Timer(_tooltipLifetime, _fadeOutTooltip);
+    }
+  }
+
+  @override
+  void dispose() {
+    _cancelTimers();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _cancelTimers() {
+    _fadeTimer?.cancel();
+    _clearTimer?.cancel();
+  }
+
+  void _fadeOutTooltip() {
+    setState(() => _tooltipVisible = false);
+    _clearTimer = Timer(_tooltipFadeDuration, widget.onSelectionDismissed);
+  }
+
+  void _handleBubbleTap(UsageItem item) {
+    if (item.id == widget.selectedItem?.id) {
+      widget.onSelectionDismissed();
+    } else {
+      widget.onItemSelected(item);
+    }
+  }
+
+  void _handleBackgroundTap() {
+    if (widget.selectedItem != null) {
+      widget.onSelectionDismissed();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,39 +102,52 @@ class BubbleChart extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
-          final layout = _layoutItems(items, size);
+          final layout = _layoutItems(widget.items, size);
           final selectedLayout = layout.cast<_BubbleLayout?>().firstWhere(
-            (bubble) => bubble?.item.id == selectedItem?.id,
+            (bubble) => bubble?.item.id == widget.selectedItem?.id,
             orElse: () => null,
           );
 
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(child: CustomPaint(painter: _ScaleRingPainter())),
-              for (final bubble in layout)
-                Positioned(
-                  left: bubble.center.dx - bubble.radius,
-                  top: bubble.center.dy - bubble.radius,
-                  child: UsageBubble(
-                    item: bubble.item,
-                    radius: bubble.radius,
-                    isSelected: bubble.item.id == selectedItem?.id,
-                    onTap: () => onItemSelected(bubble.item),
-                  ),
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: _handleBackgroundTap,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: _PulsingGlow(listenable: _pulseController),
                 ),
-              if (selectedLayout != null)
-                Positioned(
-                  left: _clamp(
-                    selectedLayout.center.dx - 82,
-                    8,
-                    size.width - 172,
-                  ),
-                  top: _tooltipTop(selectedLayout, size.height),
-                  width: 164,
-                  child: BubbleTooltip(item: selectedLayout.item),
+                Positioned.fill(
+                  child: CustomPaint(painter: _ScaleRingPainter()),
                 ),
-            ],
+                for (final bubble in layout)
+                  Positioned(
+                    left: bubble.center.dx - bubble.radius,
+                    top: bubble.center.dy - bubble.radius,
+                    child: UsageBubble(
+                      item: bubble.item,
+                      radius: bubble.radius,
+                      isSelected: bubble.item.id == widget.selectedItem?.id,
+                      onTap: () => _handleBubbleTap(bubble.item),
+                    ),
+                  ),
+                if (selectedLayout != null)
+                  Positioned(
+                    left: _clamp(
+                      selectedLayout.center.dx - 82,
+                      8,
+                      size.width - 172,
+                    ),
+                    top: _tooltipTop(selectedLayout, size.height),
+                    width: 164,
+                    child: AnimatedOpacity(
+                      opacity: _tooltipVisible ? 1 : 0,
+                      duration: _tooltipFadeDuration,
+                      child: BubbleTooltip(item: selectedLayout.item),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),
@@ -77,7 +164,7 @@ class BubbleChart extends StatelessWidget {
         .reduce(math.max)
         .toDouble();
     final minDimension = math.min(size.width, size.height);
-    final maxRadius = math.min(_maxRadius, minDimension * 0.2);
+    final maxRadius = math.min(BubbleChart._maxRadius, minDimension * 0.2);
     final radii = [
       for (final item in items) _radiusFor(item, maxSeconds, maxRadius),
     ];
@@ -95,10 +182,11 @@ class BubbleChart extends StatelessWidget {
 
   double _radiusFor(UsageItem item, double maxSeconds, double maxRadius) {
     if (maxSeconds <= 0) {
-      return _minRadius;
+      return BubbleChart._minRadius;
     }
     final normalized = item.totalDurationSeconds / maxSeconds;
-    return _minRadius + normalized * (maxRadius - _minRadius);
+    return BubbleChart._minRadius +
+        normalized * (maxRadius - BubbleChart._minRadius);
   }
 
   double _tooltipTop(_BubbleLayout layout, double height) {
@@ -120,6 +208,40 @@ class _BubbleLayout {
   final UsageItem item;
   final double radius;
   final Offset center;
+}
+
+/// A soft radial glow behind the bubbles that slowly "breathes" in sync with
+/// the chart's pulse controller. Kept at very low opacity so it stays calm.
+class _PulsingGlow extends StatelessWidget {
+  const _PulsingGlow({required this.listenable});
+
+  final Animation<double> listenable;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: listenable,
+        builder: (context, _) {
+          final pulse = Curves.easeInOut.transform(listenable.value);
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0, 0.06),
+                radius: 0.72 + 0.12 * pulse,
+                colors: [
+                  const Color(
+                    0xFF5BC0EB,
+                  ).withValues(alpha: 0.04 + 0.05 * pulse),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _ScaleRingPainter extends CustomPainter {
@@ -169,7 +291,8 @@ List<Offset> packBubbles(List<double> radii, Size size) {
     final gravity = 0.04 * (1 - step / 150);
     for (var i = 0; i < positions.length; i++) {
       final weight = (radii[i] * radii[i]) / (maxRadius * maxRadius);
-      positions[i] += (center - positions[i]) * (gravity * (0.2 + 0.8 * weight));
+      positions[i] +=
+          (center - positions[i]) * (gravity * (0.2 + 0.8 * weight));
     }
     for (var i = 0; i < positions.length; i++) {
       for (var j = i + 1; j < positions.length; j++) {

@@ -18,7 +18,10 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    // The bubble chart's pulsing background animates forever, so
+    // pumpAndSettle would never settle; pump fixed frames instead.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('FocusTrace'), findsOneWidget);
     expect(find.text('Usage Bubbles'), findsOneWidget);
@@ -27,9 +30,14 @@ void main() {
     expect(find.byIcon(Icons.settings), findsOneWidget);
 
     await tester.tap(find.byType(UsageBubble));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Productivity'), findsOneWidget);
+
+    // Let the tooltip auto-dismiss so no timers are pending at test end.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Productivity'), findsNothing);
   });
 }
 
