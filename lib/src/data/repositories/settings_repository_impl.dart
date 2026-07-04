@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/focus_trace_local_data_source.dart';
 
@@ -6,6 +8,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   static const _trackingIntervalSecondsKey = 'tracking_interval_seconds';
   static const _idleTimeoutSecondsKey = 'idle_timeout_seconds';
+  static const _excludedAppsKey = 'excluded_apps';
+  static const _hiddenAppsTodayKey = 'hidden_apps_today';
 
   final FocusTraceLocalDataSource _localDataSource;
 
@@ -37,6 +41,84 @@ class SettingsRepositoryImpl implements SettingsRepository {
       _idleTimeoutSecondsKey,
       seconds.clamp(5, 86400).toString(),
     );
+  }
+
+  @override
+  Future<List<String>> excludedApps() async {
+    final rawValue = await _localDataSource.readSetting(_excludedAppsKey);
+    return _decodeStringList(rawValue);
+  }
+
+  @override
+  Future<void> addExcludedApp(String appKey) async {
+    final apps = await excludedApps();
+    if (apps.contains(appKey)) {
+      return;
+    }
+    await _localDataSource.writeSetting(
+      _excludedAppsKey,
+      jsonEncode([...apps, appKey]),
+    );
+  }
+
+  @override
+  Future<void> removeExcludedApp(String appKey) async {
+    final apps = await excludedApps();
+    await _localDataSource.writeSetting(
+      _excludedAppsKey,
+      jsonEncode(apps.where((app) => app != appKey).toList()),
+    );
+  }
+
+  @override
+  Future<Set<String>> hiddenAppsForToday() async {
+    final rawValue = await _localDataSource.readSetting(_hiddenAppsTodayKey);
+    if (rawValue == null) {
+      return const <String>{};
+    }
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is! Map<String, Object?> ||
+          decoded['date'] != _todayKey() ||
+          decoded['apps'] is! List) {
+        return const <String>{};
+      }
+      return (decoded['apps'] as List).whereType<String>().toSet();
+    } on FormatException {
+      return const <String>{};
+    }
+  }
+
+  @override
+  Future<void> hideAppForToday(String appKey) async {
+    final hidden = await hiddenAppsForToday();
+    await _localDataSource.writeSetting(
+      _hiddenAppsTodayKey,
+      jsonEncode({
+        'date': _todayKey(),
+        'apps': {...hidden, appKey}.toList(),
+      }),
+    );
+  }
+
+  String _todayKey() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month}-${now.day}';
+  }
+
+  List<String> _decodeStringList(String? rawValue) {
+    if (rawValue == null) {
+      return const <String>[];
+    }
+    try {
+      final decoded = jsonDecode(rawValue);
+      if (decoded is! List) {
+        return const <String>[];
+      }
+      return decoded.whereType<String>().toList();
+    } on FormatException {
+      return const <String>[];
+    }
   }
 
   int? _parsePositiveInt(String? value) {

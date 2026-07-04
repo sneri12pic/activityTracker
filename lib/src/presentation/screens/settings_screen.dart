@@ -88,6 +88,51 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Excluded apps',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (state.excludedApps.isEmpty)
+                    const Text(
+                      'No excluded apps. Long-press an app on the dashboard to exclude it from tracking.',
+                    )
+                  else
+                    for (final appKey in state.excludedApps)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          appKey,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          tooltip: 'Stop excluding',
+                          icon: const Icon(Icons.undo),
+                          onPressed: state.isSaving
+                              ? null
+                              : () async {
+                                  await viewModel.removeExcludedApp(appKey);
+                                  ref
+                                      .read(dashboardViewModelProvider.notifier)
+                                      .refresh();
+                                },
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ),
           if (state.errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(

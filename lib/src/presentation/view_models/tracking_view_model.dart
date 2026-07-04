@@ -141,8 +141,13 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
           currentInfo != null &&
           (force || now.difference(previousSampleAt).inSeconds > 0) &&
           currentInfo.idleSeconds < state.idleTimeoutSeconds) {
+        // Read fresh each sample so newly excluded apps stop recording
+        // immediately, without cross-view-model coordination.
+        final excludedApps = await _settingsRepository.excludedApps();
         final durationSeconds = now.difference(previousSampleAt).inSeconds;
-        if (durationSeconds > 0) {
+        if (durationSeconds > 0 &&
+            !excludedApps.contains(currentInfo.processName) &&
+            !excludedApps.contains(currentInfo.appName)) {
           await _usageRepository.insertSession(
             UsageSession(
               id: '${now.microsecondsSinceEpoch}-${currentInfo.processName}',

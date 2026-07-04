@@ -55,6 +55,24 @@ class UsageRepositoryImpl implements UsageRepository {
   }
 
   @override
+  Future<List<UsageSession>> topSessionsForApp(
+    String appKey,
+    DateTime date, {
+    int limit = 3,
+  }) async {
+    if (_platform != UsagePlatform.windows) {
+      // Android summaries come from the OS; no per-session rows exist.
+      return const <UsageSession>[];
+    }
+
+    final sessions = await _localDataSource.getSessionsForDate(date);
+    final matching =
+        sessions.where((session) => session.appKey == appKey).toList()
+          ..sort((a, b) => b.durationSeconds.compareTo(a.durationSeconds));
+    return matching.take(limit).toList();
+  }
+
+  @override
   Future<void> insertSession(UsageSession session) {
     return _localDataSource.insertSession(session);
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/services/usage_aggregation_service.dart';
 import '../../domain/models/app_usage_summary.dart';
 import '../../domain/models/usage_session.dart';
+import '../../domain/repositories/settings_repository.dart';
 import '../../domain/repositories/usage_repository.dart';
 
 class DashboardState {
@@ -54,14 +55,17 @@ class DashboardState {
 class DashboardViewModel extends StateNotifier<DashboardState> {
   DashboardViewModel({
     required UsageRepository usageRepository,
+    required SettingsRepository settingsRepository,
     required UsagePlatform platform,
     UsageAggregationService aggregationService =
         const UsageAggregationService(),
   }) : _usageRepository = usageRepository,
+       _settingsRepository = settingsRepository,
        _aggregationService = aggregationService,
        super(DashboardState.initial(platform));
 
   final UsageRepository _usageRepository;
+  final SettingsRepository _settingsRepository;
   final UsageAggregationService _aggregationService;
 
   Future<void> loadTodayUsage({bool showLoading = true}) async {
@@ -82,7 +86,11 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         return;
       }
 
-      final summaries = await _usageRepository.getTodaySummaries();
+      final summaries = _applyFilters(
+        await _usageRepository.getTodaySummaries(),
+        await _settingsRepository.excludedApps(),
+        await _settingsRepository.hiddenAppsForToday(),
+      );
       state = state.copyWith(
         summaries: summaries,
         totalDurationSeconds: _aggregationService.totalDurationSeconds(
@@ -112,5 +120,50 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   Future<void> clearData() async {
     await _usageRepository.clearAllData();
     await loadTodayUsage();
+  }
+
+  /// Hides [summary] from today's stats only (persisted local hide list).
+  Future<void> hideAppForToday(AppUsageSummary summary) async {
+    await _settingsRepository.hideAppForToday(summary.appKey);
+    await refreshSilently();
+  }
+
+  /// Permanently excludes [summary] from tracking and displayed stats.
+  Future<void> excludeApp(AppUsageSummary summary) async {
+    await _settingsRepository.addExcludedApp(summary.appKey);
+    await refreshSilently();
+  }
+
+  Future<List<UsageSession>> topSessionsForApp(AppUsageSummary summary) {
+    return _usageRepository.topSessionsForApp(summary.appKey, DateTime.now());
+  }
+
+  List<AppUsageSummary> _applyFilters(
+    List<AppUsageSummary> summaries,
+    List<String> excludedApps,
+    Set<String> hiddenAppsToday,
+  ) {
+    final visible = summaries
+        .where(
+          (summary) =>
+              !excludedApps.contains(summary.appKey) &&
+              !hiddenAppsToday.contains(summary.appKey),
+        )
+        .toList();
+    if (visible.length == summaries.length) {
+      return summaries;
+    }
+
+    // Recompute shares so percentages reflect only the visible apps.
+    final totalSeconds = _aggregationService.totalDurationSeconds(visible);
+    return visible
+        .map(
+          (summary) => summary.copyWith(
+            percentageOfTotal: totalSeconds == 0
+                ? 0
+                : summary.totalDurationSeconds / totalSeconds,
+          ),
+        )
+        .toList();
   }
 }

@@ -8,6 +8,14 @@ abstract class UsageRepository {
 
   Future<List<AppUsageSummary>> getTodaySummaries();
 
+  /// The longest recorded sessions for [appKey] on [date], longest first.
+  /// Returns an empty list on platforms without local session storage.
+  Future<List<UsageSession>> topSessionsForApp(
+    String appKey,
+    DateTime date, {
+    int limit = 3,
+  });
+
   Future<void> insertSession(UsageSession session);
 
   Future<void> clearAllData();
