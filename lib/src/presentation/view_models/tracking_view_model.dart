@@ -152,12 +152,17 @@ class TrackingViewModel extends StateNotifier<TrackingState> {
           currentInfo != null &&
           (force || now.difference(previousSampleAt).inSeconds > 0) &&
           currentInfo.idleSeconds < state.idleTimeoutSeconds) {
+        // Read fresh each sample so newly excluded apps stop recording
+        // immediately, without cross-view-model coordination.
+        final excludedApps = await _settingsRepository.excludedApps();
         final maxSampleSeconds = state.intervalSeconds * maxSampleGapMultiplier;
         final gapSeconds = now.difference(previousSampleAt).inSeconds;
         final durationSeconds = gapSeconds > maxSampleSeconds
             ? maxSampleSeconds
             : gapSeconds;
-        if (durationSeconds > 0) {
+        if (durationSeconds > 0 &&
+            !excludedApps.contains(currentInfo.processName) &&
+            !excludedApps.contains(currentInfo.appName)) {
           // Keep startedAt consistent with the capped duration: aggregation
           // measures sessions by their timestamps, not durationSeconds.
           final startedAt = now.subtract(Duration(seconds: durationSeconds));

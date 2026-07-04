@@ -28,7 +28,17 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FocusTrace'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('FocusTrace'),
+            Text(
+              'Today tracked · ${DurationFormat.compact(Duration(seconds: dashboardState.totalDurationSeconds))}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Refresh',
@@ -59,11 +69,6 @@ class DashboardScreen extends ConsumerWidget {
               UsageBubbleScreen(summaries: dashboardState.summaries),
               const SizedBox(height: 12),
             ],
-            _TodayTotal(
-              totalSeconds: dashboardState.totalDurationSeconds,
-              platform: dashboardState.platform,
-            ),
-            const SizedBox(height: 12),
             PermissionCard(
               platform: dashboardState.platform,
               hasUsageAccess: dashboardState.hasUsageAccess,
@@ -86,6 +91,12 @@ class DashboardScreen extends ConsumerWidget {
                   await dashboardViewModel.refresh();
                 },
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Tracking runs only while FocusTrace is open.',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
             ],
             if (dashboardState.platform != UsagePlatform.android &&
                 dashboardState.platform != UsagePlatform.windows) ...[
@@ -104,55 +115,6 @@ class DashboardScreen extends ConsumerWidget {
               const _EmptyPanel(),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _TodayTotal extends StatelessWidget {
-  const _TodayTotal({required this.totalSeconds, required this.platform});
-
-  final int totalSeconds;
-  final UsagePlatform platform;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Today tracked',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            DurationFormat.compact(Duration(seconds: totalSeconds)),
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            platform == UsagePlatform.android
-                ? 'Usage Access required to read app usage.'
-                : platform == UsagePlatform.windows
-                ? 'Tracking runs only while FocusTrace is open.'
-                : 'This platform is not supported in the MVP.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
-          ),
-        ],
       ),
     );
   }

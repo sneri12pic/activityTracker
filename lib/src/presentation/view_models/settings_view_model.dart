@@ -7,6 +7,7 @@ class SettingsState {
   const SettingsState({
     required this.trackingIntervalSeconds,
     required this.idleTimeoutSeconds,
+    this.excludedApps = const <String>[],
     this.isLoading = false,
     this.isSaving = false,
     this.errorMessage,
@@ -22,6 +23,7 @@ class SettingsState {
 
   final int trackingIntervalSeconds;
   final int idleTimeoutSeconds;
+  final List<String> excludedApps;
   final bool isLoading;
   final bool isSaving;
   final String? errorMessage;
@@ -29,6 +31,7 @@ class SettingsState {
   SettingsState copyWith({
     int? trackingIntervalSeconds,
     int? idleTimeoutSeconds,
+    List<String>? excludedApps,
     bool? isLoading,
     bool? isSaving,
     String? errorMessage,
@@ -38,6 +41,7 @@ class SettingsState {
       trackingIntervalSeconds:
           trackingIntervalSeconds ?? this.trackingIntervalSeconds,
       idleTimeoutSeconds: idleTimeoutSeconds ?? this.idleTimeoutSeconds,
+      excludedApps: excludedApps ?? this.excludedApps,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
@@ -61,9 +65,11 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
     try {
       final interval = await _settingsRepository.trackingIntervalSeconds();
       final idleTimeout = await _settingsRepository.idleTimeoutSeconds();
+      final excludedApps = await _settingsRepository.excludedApps();
       state = state.copyWith(
         trackingIntervalSeconds: interval,
         idleTimeoutSeconds: idleTimeout,
+        excludedApps: excludedApps,
         isLoading: false,
       );
     } catch (error) {
@@ -96,6 +102,19 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
     }
   }
 
+  Future<void> removeExcludedApp(String appKey) async {
+    state = state.copyWith(isSaving: true, clearError: true);
+    try {
+      await _settingsRepository.removeExcludedApp(appKey);
+      state = state.copyWith(
+        excludedApps: await _settingsRepository.excludedApps(),
+        isSaving: false,
+      );
+    } catch (error) {
+      state = state.copyWith(isSaving: false, errorMessage: error.toString());
+    }
+  }
+
   Future<void> clearLocalData() async {
     state = state.copyWith(isSaving: true, clearError: true);
     try {
@@ -105,6 +124,7 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
       state = state.copyWith(
         trackingIntervalSeconds: 5,
         idleTimeoutSeconds: 60,
+        excludedApps: const <String>[],
         isSaving: false,
       );
     } catch (error) {

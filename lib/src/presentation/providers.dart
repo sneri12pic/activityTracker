@@ -69,6 +69,7 @@ final dashboardViewModelProvider =
     StateNotifierProvider<DashboardViewModel, DashboardState>((ref) {
       final viewModel = DashboardViewModel(
         usageRepository: ref.watch(usageRepositoryProvider),
+        settingsRepository: ref.watch(settingsRepositoryProvider),
         platform: ref.watch(usagePlatformProvider),
         aggregationService: ref.watch(usageAggregationServiceProvider),
       );
