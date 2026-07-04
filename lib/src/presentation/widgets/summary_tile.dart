@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/utils/duration_format.dart';
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_session.dart';
 import '../providers.dart';
+import '../screens/restriction_editor_sheet.dart';
 
 const _sheetColor = Color(0xFF0D111A);
 
@@ -17,6 +19,13 @@ class SummaryTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final percentage = (summary.percentageOfTotal * 100).clamp(0, 100);
+    final restrictionState = ref.watch(restrictionsViewModelProvider);
+    final isBlocked = isAppBlocked(
+      appKey: summary.appKey,
+      rules: restrictionState.rules,
+      now: DateTime.now(),
+      usageSecondsToday: summary.totalDurationSeconds,
+    );
 
     return Card(
       elevation: 0,
@@ -33,23 +42,35 @@ class SummaryTile extends ConsumerWidget {
               Row(
                 children: [
                   if (summary.iconBytes != null)
-                    ClipOval(
-                      child: Image.memory(
-                        summary.iconBytes!,
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
-                      ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        ClipOval(
+                          child: Image.memory(
+                            summary.iconBytes!,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
+                          ),
+                        ),
+                        if (isBlocked) const _LockBadge(),
+                      ],
                     )
                   else
-                    CircleAvatar(
-                      radius: 18,
-                      child: Text(
-                        summary.appName.isEmpty
-                            ? '?'
-                            : summary.appName[0].toUpperCase(),
-                      ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          child: Text(
+                            summary.appName.isEmpty
+                                ? '?'
+                                : summary.appName[0].toUpperCase(),
+                          ),
+                        ),
+                        if (isBlocked) const _LockBadge(),
+                      ],
                     ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -125,6 +146,13 @@ class SummaryTile extends ConsumerWidget {
   }
 
   Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+    final restrictionState = ref.read(restrictionsViewModelProvider);
+    final isBlocked = isAppBlocked(
+      appKey: summary.appKey,
+      rules: restrictionState.rules,
+      now: DateTime.now(),
+      usageSecondsToday: summary.totalDurationSeconds,
+    );
     final action = await showModalBottomSheet<_SummaryAction>(
       context: context,
       backgroundColor: _sheetColor,
@@ -134,6 +162,20 @@ class SummaryTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SheetHeader(title: summary.appName),
+            if (isBlocked)
+              ListTile(
+                leading: const Icon(Icons.lock_open_outlined),
+                title: const Text('Unblock now'),
+                subtitle: const Text('Remove active blocking rules'),
+                onTap: () =>
+                    Navigator.of(context).pop(_SummaryAction.unblockNow),
+              ),
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('Restrict app...'),
+              subtitle: const Text('Block now, set a limit, or add a schedule'),
+              onTap: () => Navigator.of(context).pop(_SummaryAction.restrict),
+            ),
             ListTile(
               leading: const Icon(Icons.visibility_off_outlined),
               title: const Text('Remove from today'),
@@ -157,6 +199,26 @@ class SummaryTile extends ConsumerWidget {
 
     final dashboardViewModel = ref.read(dashboardViewModelProvider.notifier);
     switch (action) {
+      case _SummaryAction.unblockNow:
+        await ref
+            .read(restrictionsViewModelProvider.notifier)
+            .unblockAppNow(
+              appKey: summary.appKey,
+              usageSecondsToday: summary.totalDurationSeconds,
+            );
+      case _SummaryAction.restrict:
+        final rule = await showRestrictionEditor(
+          context,
+          appKey: summary.appKey,
+          appName: summary.appName,
+        );
+        if (rule == null || !context.mounted) {
+          return;
+        }
+        await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
+        if (context.mounted) {
+          await promptRestrictionPermissionsIfNeeded(context, ref);
+        }
       case _SummaryAction.removeFromToday:
         await dashboardViewModel.hideAppForToday(summary);
       case _SummaryAction.exclude:
@@ -195,7 +257,30 @@ class SummaryTile extends ConsumerWidget {
   }
 }
 
-enum _SummaryAction { removeFromToday, exclude }
+enum _SummaryAction { unblockNow, restrict, removeFromToday, exclude }
+
+class _LockBadge extends StatelessWidget {
+  const _LockBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: -2,
+      bottom: -2,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF0D111A), width: 1.5),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(3),
+          child: Icon(Icons.lock, size: 10, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
 
 class _SessionDetailsSheet extends StatelessWidget {
   const _SessionDetailsSheet({

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers.dart';
+import 'restrictions_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -41,6 +42,9 @@ class SettingsScreen extends ConsumerWidget {
                             final confirmed = await _confirmClearData(context);
                             if (confirmed && context.mounted) {
                               await viewModel.clearLocalData();
+                              await ref
+                                  .read(restrictionsViewModelProvider.notifier)
+                                  .load();
                               ref
                                   .read(dashboardViewModelProvider.notifier)
                                   .refresh();
@@ -51,6 +55,25 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 0,
+            child: ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('App restrictions'),
+              subtitle: const Text(
+                'Block apps now, by daily limit, or schedule',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const RestrictionsScreen(),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 12),

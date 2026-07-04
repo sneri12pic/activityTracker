@@ -10,6 +10,9 @@ void main() {
         overrides: [
           usagePlatformProvider.overrideWithValue(UsagePlatform.windows),
           usageRepositoryProvider.overrideWithValue(_FakeUsageRepository()),
+          platformDataSourceProvider.overrideWithValue(
+            _FakePlatformDataSource(),
+          ),
           settingsRepositoryProvider.overrideWithValue(
             _FakeSettingsRepository(),
           ),
@@ -74,11 +77,39 @@ class _FakeUsageRepository implements UsageRepository {
   Future<void> openUsageAccessSettings() async {}
 }
 
+class _FakePlatformDataSource implements PlatformUsageDataSource {
+  @override
+  Future<ActiveWindowInfo?> getActiveWindowInfo() async => null;
+
+  @override
+  Future<List<AppUsageSummary>> getTodayUsageStats() async =>
+      const <AppUsageSummary>[];
+
+  @override
+  Future<bool> hasOverlayPermission() async => true;
+
+  @override
+  Future<bool> hasUsageAccess() async => true;
+
+  @override
+  Future<void> openOverlaySettings() async {}
+
+  @override
+  Future<void> openUsageAccessSettings() async {}
+
+  @override
+  Future<void> requestNotificationsPermission() async {}
+
+  @override
+  Future<void> syncRestrictions(String json) async {}
+}
+
 class _FakeSettingsRepository implements SettingsRepository {
   int _trackingIntervalSeconds = 5;
   int _idleTimeoutSeconds = 60;
   final List<String> _excludedApps = [];
   final Set<String> _hiddenAppsToday = {};
+  bool _onboardingCompleted = true;
 
   @override
   Future<List<String>> excludedApps() async => List.of(_excludedApps);
@@ -104,6 +135,14 @@ class _FakeSettingsRepository implements SettingsRepository {
   }
 
   @override
+  Future<bool> onboardingCompleted() async => _onboardingCompleted;
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async {
+    _onboardingCompleted = completed;
+  }
+
+  @override
   Future<int> idleTimeoutSeconds() async => _idleTimeoutSeconds;
 
   @override
@@ -118,4 +157,17 @@ class _FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<int> trackingIntervalSeconds() async => _trackingIntervalSeconds;
+
+  @override
+  Future<List<RestrictionRule>> restrictionRules() async =>
+      const <RestrictionRule>[];
+
+  @override
+  Future<void> saveRestrictionRule(RestrictionRule rule) async {}
+
+  @override
+  Future<void> removeRestrictionRule(
+    String appKey,
+    RestrictionRuleType type,
+  ) async {}
 }

@@ -39,6 +39,25 @@ class _FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> hideAppForToday(String appKey) async {}
+
+  @override
+  Future<bool> onboardingCompleted() async => true;
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async {}
+
+  @override
+  Future<List<RestrictionRule>> restrictionRules() async =>
+      const <RestrictionRule>[];
+
+  @override
+  Future<void> saveRestrictionRule(RestrictionRule rule) async {}
+
+  @override
+  Future<void> removeRestrictionRule(
+    String appKey,
+    RestrictionRuleType type,
+  ) async {}
 }
 
 class _FakeUsageRepository implements UsageRepository {
@@ -90,6 +109,18 @@ class _FakeWindowsDataSource implements PlatformUsageDataSource {
 
   @override
   Future<void> openUsageAccessSettings() async {}
+
+  @override
+  Future<bool> hasOverlayPermission() async => true;
+
+  @override
+  Future<void> openOverlaySettings() async {}
+
+  @override
+  Future<void> requestNotificationsPermission() async {}
+
+  @override
+  Future<void> syncRestrictions(String json) async {}
 
   @override
   Future<List<AppUsageSummary>> getTodayUsageStats() async =>
@@ -159,8 +190,7 @@ void main() {
     });
   });
 
-  test('a stalled timer gap is capped to a small multiple of the interval',
-      () {
+  test('a stalled timer gap is capped to a small multiple of the interval', () {
     fakeAsync((async) {
       var now = DateTime(2026, 7, 4, 12);
       final viewModel = buildViewModel(() => now);

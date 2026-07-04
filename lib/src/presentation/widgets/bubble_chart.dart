@@ -11,14 +11,18 @@ class BubbleChart extends StatefulWidget {
   const BubbleChart({
     required this.items,
     required this.selectedItem,
+    required this.blockedItemIds,
     required this.onItemSelected,
+    required this.onItemLongPressed,
     required this.onSelectionDismissed,
     super.key,
   });
 
   final List<UsageItem> items;
   final UsageItem? selectedItem;
+  final Set<String> blockedItemIds;
   final ValueChanged<UsageItem> onItemSelected;
+  final ValueChanged<UsageItem> onItemLongPressed;
   final VoidCallback onSelectionDismissed;
 
   static const double _minRadius = 26;
@@ -146,7 +150,9 @@ class _BubbleChartState extends State<BubbleChart>
                 item: bubble.item,
                 radius: bubble.radius,
                 isSelected: bubble.item.id == widget.selectedItem?.id,
+                isBlocked: widget.blockedItemIds.contains(bubble.item.id),
                 onTap: () => _handleBubbleTap(bubble.item),
+                onLongPress: () => widget.onItemLongPressed(bubble.item),
               ),
             ),
           if (selectedLayout != null)

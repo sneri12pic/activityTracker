@@ -10,6 +10,8 @@ import '../domain/models/usage_session.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/usage_repository.dart';
 import 'view_models/dashboard_view_model.dart';
+import 'view_models/onboarding_view_model.dart';
+import 'view_models/restrictions_view_model.dart';
 import 'view_models/settings_view_model.dart';
 import 'view_models/tracking_view_model.dart';
 
@@ -65,6 +67,15 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return SettingsRepositoryImpl(ref.watch(localDataSourceProvider));
 });
 
+final onboardingViewModelProvider =
+    StateNotifierProvider<OnboardingViewModel, OnboardingState>((ref) {
+      final viewModel = OnboardingViewModel(
+        settingsRepository: ref.watch(settingsRepositoryProvider),
+      );
+      viewModel.load();
+      return viewModel;
+    });
+
 final dashboardViewModelProvider =
     StateNotifierProvider<DashboardViewModel, DashboardState>((ref) {
       final viewModel = DashboardViewModel(
@@ -94,6 +105,17 @@ final settingsViewModelProvider =
       final viewModel = SettingsViewModel(
         settingsRepository: ref.watch(settingsRepositoryProvider),
         usageRepository: ref.watch(usageRepositoryProvider),
+      );
+      viewModel.load();
+      return viewModel;
+    });
+
+final restrictionsViewModelProvider =
+    StateNotifierProvider<RestrictionsViewModel, RestrictionsState>((ref) {
+      final viewModel = RestrictionsViewModel(
+        settingsRepository: ref.watch(settingsRepositoryProvider),
+        platformDataSource: ref.watch(platformDataSourceProvider),
+        platform: ref.watch(usagePlatformProvider),
       );
       viewModel.load();
       return viewModel;

@@ -1,3 +1,5 @@
+import '../models/restriction_rule.dart';
+
 abstract class SettingsRepository {
   Future<int> trackingIntervalSeconds();
 
@@ -18,4 +20,14 @@ abstract class SettingsRepository {
   Future<Set<String>> hiddenAppsForToday();
 
   Future<void> hideAppForToday(String appKey);
+
+  Future<bool> onboardingCompleted();
+
+  Future<void> setOnboardingCompleted(bool completed);
+
+  Future<List<RestrictionRule>> restrictionRules();
+
+  Future<void> saveRestrictionRule(RestrictionRule rule);
+
+  Future<void> removeRestrictionRule(String appKey, RestrictionRuleType type);
 }

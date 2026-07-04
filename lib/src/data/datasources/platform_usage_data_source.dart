@@ -1,4 +1,3 @@
-
 import 'package:flutter/services.dart';
 
 import '../../domain/models/app_usage_summary.dart';
@@ -22,6 +21,14 @@ abstract class PlatformUsageDataSource {
 
   Future<void> openUsageAccessSettings();
 
+  Future<bool> hasOverlayPermission();
+
+  Future<void> openOverlaySettings();
+
+  Future<void> requestNotificationsPermission();
+
+  Future<void> syncRestrictions(String json);
+
   Future<List<AppUsageSummary>> getTodayUsageStats();
 
   Future<ActiveWindowInfo?> getActiveWindowInfo();
@@ -42,6 +49,26 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
   @override
   Future<void> openUsageAccessSettings() {
     return _channel.invokeMethod<void>('openUsageAccessSettings');
+  }
+
+  @override
+  Future<bool> hasOverlayPermission() async {
+    return await _channel.invokeMethod<bool>('hasOverlayPermission') ?? false;
+  }
+
+  @override
+  Future<void> openOverlaySettings() {
+    return _channel.invokeMethod<void>('openOverlaySettings');
+  }
+
+  @override
+  Future<void> requestNotificationsPermission() {
+    return _channel.invokeMethod<void>('requestNotificationsPermission');
+  }
+
+  @override
+  Future<void> syncRestrictions(String json) {
+    return _channel.invokeMethod<void>('syncRestrictions', json);
   }
 
   @override
@@ -116,6 +143,18 @@ class WindowsUsageDataSource implements PlatformUsageDataSource {
   Future<void> openUsageAccessSettings() async {}
 
   @override
+  Future<bool> hasOverlayPermission() async => true;
+
+  @override
+  Future<void> openOverlaySettings() async {}
+
+  @override
+  Future<void> requestNotificationsPermission() async {}
+
+  @override
+  Future<void> syncRestrictions(String json) async {}
+
+  @override
   Future<List<AppUsageSummary>> getTodayUsageStats() {
     throw UnsupportedError(
       'Windows summaries are calculated from locally tracked sessions.',
@@ -148,6 +187,18 @@ class UnsupportedPlatformUsageDataSource implements PlatformUsageDataSource {
   Future<void> openUsageAccessSettings() {
     throw UnsupportedError('Usage permissions are not available.');
   }
+
+  @override
+  Future<bool> hasOverlayPermission() async => false;
+
+  @override
+  Future<void> openOverlaySettings() async {}
+
+  @override
+  Future<void> requestNotificationsPermission() async {}
+
+  @override
+  Future<void> syncRestrictions(String json) async {}
 
   @override
   Future<List<AppUsageSummary>> getTodayUsageStats() {

@@ -1,6 +1,6 @@
 package com.example.focustrace
 
-import android.app.AppOpsManager
+import android.Manifest
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
@@ -9,8 +9,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import android.os.Build
-import android.os.Process
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -26,8 +26,23 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "hasUsageAccess" -> result.success(hasUsageAccess())
+                    "hasOverlayPermission" -> result.success(
+                        FocusTracePermissions.hasOverlayPermission(this)
+                    )
                     "openUsageAccessSettings" -> {
                         openUsageAccessSettings()
+                        result.success(null)
+                    }
+                    "openOverlaySettings" -> {
+                        openOverlaySettings()
+                        result.success(null)
+                    }
+                    "requestNotificationsPermission" -> {
+                        requestNotificationsPermission()
+                        result.success(null)
+                    }
+                    "syncRestrictions" -> {
+                        syncRestrictions(call.arguments as? String ?: "")
                         result.success(null)
                     }
                     "getTodayUsageStats" -> {
@@ -48,22 +63,7 @@ class MainActivity : FlutterActivity() {
 
     @Suppress("DEPRECATION")
     private fun hasUsageAccess(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            appOps.unsafeCheckOpNoThrow(
-                AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(),
-                packageName
-            )
-        } else {
-            appOps.checkOpNoThrow(
-                AppOpsManager.OPSTR_GET_USAGE_STATS,
-                Process.myUid(),
-                packageName
-            )
-        }
-
-        return mode == AppOpsManager.MODE_ALLOWED
+        return FocusTracePermissions.hasUsageAccess(this)
     }
 
     private fun openUsageAccessSettings() {
@@ -77,6 +77,56 @@ class MainActivity : FlutterActivity() {
                 Intent(Settings.ACTION_SETTINGS)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
+        }
+    }
+
+    private fun openOverlaySettings() {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName")
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            startActivity(
+                Intent(Settings.ACTION_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    }
+
+    private fun requestNotificationsPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    private fun syncRestrictions(json: String) {
+        getSharedPreferences(RestrictionRules.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(RestrictionRules.PREFS_RULES_KEY, json)
+            .apply()
+
+        val serviceIntent = Intent(this, BlockerService::class.java)
+        if (
+            RestrictionRules.hasRules(json) &&
+            FocusTracePermissions.hasOverlayPermission(this) &&
+            hasUsageAccess()
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } else {
+            stopService(serviceIntent)
         }
     }
 
@@ -178,5 +228,6 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val CHANNEL_NAME = "focustrace/usage"
+        const val NOTIFICATION_PERMISSION_REQUEST_CODE = 7104
     }
 }

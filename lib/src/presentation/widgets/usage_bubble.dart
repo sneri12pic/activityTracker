@@ -7,14 +7,18 @@ class UsageBubble extends StatelessWidget {
     required this.item,
     required this.radius,
     required this.isSelected,
+    required this.isBlocked,
     required this.onTap,
+    required this.onLongPress,
     super.key,
   });
 
   final UsageItem item;
   final double radius;
   final bool isSelected;
+  final bool isBlocked;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +30,7 @@ class UsageBubble extends StatelessWidget {
       label: '${item.name}, ${item.category}',
       child: GestureDetector(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: AnimatedScale(
           scale: isSelected ? 1.08 : 1,
           duration: const Duration(milliseconds: 180),
@@ -55,8 +60,35 @@ class UsageBubble extends StatelessWidget {
                 ),
               ],
             ),
-            child: Center(
-              child: _BubbleContent(item: item, radius: radius),
+            child: Stack(
+              children: [
+                Center(
+                  child: _BubbleContent(item: item, radius: radius),
+                ),
+                if (isBlocked)
+                  Positioned(
+                    right: radius * 0.24,
+                    bottom: radius * 0.24,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all((radius * 0.08).clamp(3, 5)),
+                        child: Icon(
+                          Icons.lock,
+                          color: Colors.white,
+                          size: (radius * 0.22).clamp(10, 15),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

@@ -18,6 +18,7 @@ class DashboardScreen extends ConsumerWidget {
     final dashboardViewModel = ref.read(dashboardViewModelProvider.notifier);
     final trackingState = ref.watch(trackingViewModelProvider);
     final trackingViewModel = ref.read(trackingViewModelProvider.notifier);
+    ref.watch(restrictionsViewModelProvider);
 
     // Reload the dashboard on every tracking sample so the total climbs live.
     ref.listen(trackingViewModelProvider, (previous, next) {

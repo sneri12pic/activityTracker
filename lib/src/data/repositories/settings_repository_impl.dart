@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../domain/models/restriction_rule.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/focus_trace_local_data_source.dart';
 
@@ -10,6 +11,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
   static const _idleTimeoutSecondsKey = 'idle_timeout_seconds';
   static const _excludedAppsKey = 'excluded_apps';
   static const _hiddenAppsTodayKey = 'hidden_apps_today';
+  static const _restrictionRulesKey = 'restriction_rules';
+  static const _onboardingCompletedKey = 'onboarding_completed';
 
   final FocusTraceLocalDataSource _localDataSource;
 
@@ -101,6 +104,57 @@ class SettingsRepositoryImpl implements SettingsRepository {
     );
   }
 
+  @override
+  Future<bool> onboardingCompleted() async {
+    return await _localDataSource.readSetting(_onboardingCompletedKey) ==
+        'true';
+  }
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) {
+    return _localDataSource.writeSetting(
+      _onboardingCompletedKey,
+      completed.toString(),
+    );
+  }
+
+  @override
+  Future<List<RestrictionRule>> restrictionRules() async {
+    final rules = decodeRules(
+      await _localDataSource.readSetting(_restrictionRulesKey),
+    );
+    final pruned = pruneExpiredBlockNowRules(rules);
+    if (pruned.length != rules.length) {
+      await _writeRestrictionRules(pruned);
+    }
+    return pruned;
+  }
+
+  @override
+  Future<void> saveRestrictionRule(RestrictionRule rule) async {
+    final rules = await restrictionRules();
+    final upserted = [
+      for (final existing in rules)
+        if (existing.appKey != rule.appKey || existing.type != rule.type)
+          existing,
+      rule,
+    ];
+    await _writeRestrictionRules(upserted);
+  }
+
+  @override
+  Future<void> removeRestrictionRule(
+    String appKey,
+    RestrictionRuleType type,
+  ) async {
+    final rules = await restrictionRules();
+    await _writeRestrictionRules(
+      rules
+          .where((rule) => rule.appKey != appKey || rule.type != type)
+          .toList(),
+    );
+  }
+
   String _todayKey() {
     final now = DateTime.now();
     return '${now.year}-${now.month}-${now.day}';
@@ -127,5 +181,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       return null;
     }
     return parsed;
+  }
+
+  Future<void> _writeRestrictionRules(List<RestrictionRule> rules) {
+    return _localDataSource.writeSetting(
+      _restrictionRulesKey,
+      encodeRules(rules),
+    );
   }
 }
