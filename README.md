@@ -12,9 +12,9 @@ The MVP supports:
 
 FocusTrace does not implement hidden monitoring, keylogging, screenshots, clipboard reading, browser history reading, or content monitoring.
 
-##Demo
+## Demo
 
-<img width="1080" height="2340" alt="image" src="https://github.com/user-attachments/assets/c1bdc372-2910-45bb-a1ac-ca4159ee372c" />
+<img width="540" height="1170" alt="image" src="https://github.com/user-attachments/assets/c1bdc372-2910-45bb-a1ac-ca4159ee372c" />
 
 
 ## Platforms
