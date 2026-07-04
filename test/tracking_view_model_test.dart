@@ -24,6 +24,21 @@ class _FakeSettingsRepository implements SettingsRepository {
   Future<void> setIdleTimeoutSeconds(int seconds) async {
     idleTimeout = seconds;
   }
+
+  @override
+  Future<List<String>> excludedApps() async => const <String>[];
+
+  @override
+  Future<void> addExcludedApp(String appKey) async {}
+
+  @override
+  Future<void> removeExcludedApp(String appKey) async {}
+
+  @override
+  Future<Set<String>> hiddenAppsForToday() async => const <String>{};
+
+  @override
+  Future<void> hideAppForToday(String appKey) async {}
 }
 
 class _FakeUsageRepository implements UsageRepository {
@@ -48,6 +63,13 @@ class _FakeUsageRepository implements UsageRepository {
     }
     sessions.add(session);
   }
+
+  @override
+  Future<List<UsageSession>> topSessionsForApp(
+    String appKey,
+    DateTime date, {
+    int limit = 3,
+  }) async => const <UsageSession>[];
 
   @override
   Future<void> clearAllData() async {
