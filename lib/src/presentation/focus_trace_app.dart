@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/dashboard_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 class FocusTraceApp extends StatelessWidget {
   const FocusTraceApp({super.key});
@@ -23,7 +23,7 @@ class FocusTraceApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const DashboardScreen(),
+      home: const OnboardingGate(),
     );
   }
 }
