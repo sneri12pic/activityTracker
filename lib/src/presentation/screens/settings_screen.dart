@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -79,41 +81,6 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Card(
             elevation: 0,
-            child: Column(
-              children: [
-                _NumberSettingTile(
-                  title: 'Windows tracking interval',
-                  subtitle: '${state.trackingIntervalSeconds} seconds',
-                  value: state.trackingIntervalSeconds,
-                  min: 1,
-                  max: 3600,
-                  onChanged: (seconds) async {
-                    await viewModel.updateTrackingInterval(seconds);
-                    await ref
-                        .read(trackingViewModelProvider.notifier)
-                        .updateTrackingInterval(seconds);
-                  },
-                ),
-                const Divider(height: 1),
-                _NumberSettingTile(
-                  title: 'Windows idle timeout',
-                  subtitle: '${state.idleTimeoutSeconds} seconds',
-                  value: state.idleTimeoutSeconds,
-                  min: 5,
-                  max: 86400,
-                  onChanged: (seconds) async {
-                    await viewModel.updateIdleTimeout(seconds);
-                    await ref
-                        .read(trackingViewModelProvider.notifier)
-                        .updateIdleTimeout(seconds);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            elevation: 0,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -153,6 +120,45 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                 ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Chip(
+              avatar: const Icon(Icons.hourglass_top, size: 18),
+              label: const Text('Coming soon : Windows Tracking'),
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // ponytail: settings disabled for Play release, unblur when Windows sync ships
+          IgnorePointer(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+              child: Card(
+                elevation: 0,
+                child: Column(
+                  children: [
+                    _NumberSettingTile(
+                      title: 'Windows tracking interval',
+                      subtitle: '${state.trackingIntervalSeconds} seconds',
+                      value: state.trackingIntervalSeconds,
+                      min: 1,
+                      max: 3600,
+                      onChanged: (_) {},
+                    ),
+                    const Divider(height: 1),
+                    _NumberSettingTile(
+                      title: 'Windows idle timeout',
+                      subtitle: '${state.idleTimeoutSeconds} seconds',
+                      value: state.idleTimeoutSeconds,
+                      min: 5,
+                      max: 86400,
+                      onChanged: (_) {},
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
