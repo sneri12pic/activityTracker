@@ -32,6 +32,10 @@ abstract class PlatformUsageDataSource {
   Future<List<AppUsageSummary>> getTodayUsageStats();
 
   Future<ActiveWindowInfo?> getActiveWindowInfo();
+
+  /// Launchable installed apps (name, package, icon) with zero usage.
+  /// Empty where unsupported.
+  Future<List<AppUsageSummary>> getInstalledApps();
 }
 
 class AndroidUsageDataSource implements PlatformUsageDataSource {
@@ -110,6 +114,15 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
     );
   }
 
+  @override
+  Future<List<AppUsageSummary>> getInstalledApps() async {
+    final rows = await _channel.invokeListMethod<Object?>('getInstalledApps');
+    return (rows ?? const <Object?>[])
+        .whereType<Map>()
+        .map((row) => _summaryFromAndroidMap(Map<String, Object?>.from(row)))
+        .toList();
+  }
+
   AppUsageSummary _summaryFromAndroidMap(Map<String, Object?> row) {
     final durationMs = (row['totalTimeInForegroundMs'] as num?)?.toInt() ?? 0;
     final lastUsedMs = (row['lastTimeUsedMs'] as num?)?.toInt();
@@ -175,6 +188,9 @@ class WindowsUsageDataSource implements PlatformUsageDataSource {
       idleSeconds: (row['idleSeconds'] as num?)?.toDouble() ?? 0,
     );
   }
+
+  @override
+  Future<List<AppUsageSummary>> getInstalledApps() async => const [];
 }
 
 class UnsupportedPlatformUsageDataSource implements PlatformUsageDataSource {
@@ -209,4 +225,7 @@ class UnsupportedPlatformUsageDataSource implements PlatformUsageDataSource {
   Future<ActiveWindowInfo?> getActiveWindowInfo() {
     throw UnsupportedError('Active window tracking is not supported.');
   }
+
+  @override
+  Future<List<AppUsageSummary>> getInstalledApps() async => const [];
 }

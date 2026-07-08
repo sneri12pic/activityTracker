@@ -12,6 +12,7 @@ import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -44,6 +45,25 @@ class MainActivity : FlutterActivity() {
                     "syncRestrictions" -> {
                         syncRestrictions(call.arguments as? String ?: "")
                         result.success(null)
+                    }
+                    "getInstalledApps" -> {
+                        // Icon encoding for every launchable app is too slow
+                        // for the main thread.
+                        Thread {
+                            try {
+                                val apps = getInstalledApps()
+                                runOnUiThread { result.success(apps) }
+                            } catch (e: Exception) {
+                                Log.e(LOG_TAG, "getInstalledApps failed", e)
+                                runOnUiThread {
+                                    result.error(
+                                        "INSTALLED_APPS_FAILED",
+                                        e.message,
+                                        null
+                                    )
+                                }
+                            }
+                        }.start()
                     }
                     "getTodayUsageStats" -> {
                         if (!hasUsageAccess()) {
@@ -197,9 +217,42 @@ class MainActivity : FlutterActivity() {
         return packageManager.getLaunchIntentForPackage(packageName) != null
     }
 
+    /** All launchable apps: popular apps first, then the rest by label. */
+    @Suppress("DEPRECATION")
+    private fun getInstalledApps(): List<Map<String, Any?>> {
+        val popular = listOf(
+            "com.zhiliaoapp.musically",
+            "com.instagram.android",
+            "com.google.android.youtube",
+            "com.discord",
+            "org.telegram.messenger",
+            "com.whatsapp",
+            "com.snapchat.android",
+            "com.facebook.katana",
+            "com.twitter.android",
+            "com.reddit.frontpage"
+        )
+        val launchable = packageManager.getInstalledApplications(0)
+            .map { it.packageName }
+            .filter { it != packageName && isUserFacingApp(it) }
+        val popularFirst = popular.filter(launchable::contains)
+        val rest = launchable
+            .filterNot(popularFirst::contains)
+            .sortedBy { appLabelFor(it).lowercase() }
+        return (popularFirst + rest).map { pkg ->
+            mapOf(
+                "packageName" to pkg,
+                "appName" to appLabelFor(pkg),
+                "iconBytes" to appIconFor(pkg)
+            )
+        }
+    }
+
     private val iconCache = HashMap<String, ByteArray?>()
 
-    private fun appIconFor(packageName: String): ByteArray? {
+    // Called from both the main thread (usage stats) and the installed-apps
+    // worker thread, so the cache access must be synchronized.
+    private fun appIconFor(packageName: String): ByteArray? = synchronized(iconCache) {
         return iconCache.getOrPut(packageName) {
             try {
                 val drawable = packageManager.getApplicationIcon(packageName)
@@ -228,6 +281,7 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val CHANNEL_NAME = "focustrace/usage"
+        const val LOG_TAG = "FocusTrace"
         const val NOTIFICATION_PERMISSION_REQUEST_CODE = 7104
     }
 }

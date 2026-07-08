@@ -6,6 +6,7 @@ import '../data/datasources/focus_trace_local_data_source.dart';
 import '../data/datasources/platform_usage_data_source.dart';
 import '../data/repositories/settings_repository_impl.dart';
 import '../data/repositories/usage_repository_impl.dart';
+import '../domain/models/app_usage_summary.dart';
 import '../domain/models/usage_session.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/usage_repository.dart';
@@ -51,6 +52,18 @@ final platformDataSourceProvider = Provider<PlatformUsageDataSource>((ref) {
     case UsagePlatform.linux:
     case UsagePlatform.unsupported:
       return const UnsupportedPlatformUsageDataSource();
+  }
+});
+
+final installedAppsProvider = FutureProvider<List<AppUsageSummary>>((
+  ref,
+) async {
+  try {
+    return await ref.watch(platformDataSourceProvider).getInstalledApps();
+  } catch (error) {
+    // Decorative/auxiliary data: fall back to an empty list, never block UI.
+    debugPrint('getInstalledApps failed: $error');
+    return const [];
   }
 });
 

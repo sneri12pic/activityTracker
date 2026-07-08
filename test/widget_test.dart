@@ -82,6 +82,10 @@ class _FakePlatformDataSource implements PlatformUsageDataSource {
   Future<ActiveWindowInfo?> getActiveWindowInfo() async => null;
 
   @override
+  Future<List<AppUsageSummary>> getInstalledApps() async =>
+      const <AppUsageSummary>[];
+
+  @override
   Future<List<AppUsageSummary>> getTodayUsageStats() async =>
       const <AppUsageSummary>[];
 
