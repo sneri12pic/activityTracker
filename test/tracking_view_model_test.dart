@@ -134,6 +134,10 @@ class _FakeWindowsDataSource implements PlatformUsageDataSource {
     }
     return info;
   }
+
+  @override
+  Future<List<AppUsageSummary>> getInstalledApps() async =>
+      const <AppUsageSummary>[];
 }
 
 void main() {
