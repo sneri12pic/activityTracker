@@ -40,11 +40,6 @@ class UsageAggregationService {
         ..lastUsedAt = _maxDate(bucket.lastUsedAt, clippedEnd);
     }
 
-    final totalSeconds = buckets.values.fold<int>(
-      0,
-      (total, bucket) => total + bucket.totalDurationSeconds,
-    );
-
     final summaries =
         buckets.values
             .map(
@@ -53,9 +48,7 @@ class UsageAggregationService {
                 packageName: bucket.packageName,
                 processName: bucket.processName,
                 totalDurationSeconds: bucket.totalDurationSeconds,
-                percentageOfTotal: totalSeconds == 0
-                    ? 0
-                    : bucket.totalDurationSeconds / totalSeconds,
+                percentageOfTotal: 0,
                 lastUsedAt: bucket.lastUsedAt,
               ),
             )
@@ -70,7 +63,7 @@ class UsageAggregationService {
             return a.appName.toLowerCase().compareTo(b.appName.toLowerCase());
           });
 
-    return summaries;
+    return withPercentages(summaries);
   }
 
   int totalDurationSeconds(Iterable<AppUsageSummary> summaries) {
@@ -78,6 +71,20 @@ class UsageAggregationService {
       0,
       (total, summary) => total + summary.totalDurationSeconds,
     );
+  }
+
+  List<AppUsageSummary> withPercentages(Iterable<AppUsageSummary> summaries) {
+    final items = summaries.toList();
+    final totalSeconds = totalDurationSeconds(items);
+    return items
+        .map(
+          (summary) => summary.copyWith(
+            percentageOfTotal: totalSeconds == 0
+                ? 0
+                : summary.totalDurationSeconds / totalSeconds,
+          ),
+        )
+        .toList();
   }
 }
 

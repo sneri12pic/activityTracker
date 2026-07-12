@@ -4,8 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -141,51 +139,20 @@ class BlockerService : Service() {
     @Suppress("DEPRECATION")
     private fun todayUsageSeconds(packageNames: Set<String>, now: Long): Map<String, Long> {
         if (packageNames.isEmpty()) return emptyMap()
-        val usageStatsManager =
-            getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val totals = HashMap<String, Long>()
-        val foregroundSince = HashMap<String, Long>()
-        val events = usageStatsManager.queryEvents(startOfToday(), now)
-        val event = UsageEvents.Event()
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val eventPackage = event.packageName ?: continue
-            if (!packageNames.contains(eventPackage)) continue
-            if (isForegroundEvent(event.eventType)) {
-                foregroundSince[eventPackage] = event.timeStamp
-            } else if (isBackgroundEvent(event.eventType)) {
-                val start = foregroundSince.remove(eventPackage)
-                if (start != null && event.timeStamp > start) {
-                    totals[eventPackage] =
-                        (totals[eventPackage] ?: 0L) + (event.timeStamp - start)
-                }
-            }
-        }
-        for ((eventPackage, start) in foregroundSince) {
-            if (now > start) {
-                totals[eventPackage] = (totals[eventPackage] ?: 0L) + (now - start)
-            }
-        }
-        return totals.mapValues { it.value / 1000L }
+        return UsageStats.foregroundTotals(
+            this,
+            UsageStats.startOfTodayMillis(),
+            now,
+            packageNames,
+        ).mapValues { it.value.totalMs / 1000L }
     }
 
-    @Suppress("DEPRECATION")
     private fun currentForegroundPackage(now: Long): String? {
-        val usageStatsManager =
-            getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val events = usageStatsManager.queryEvents(startOfToday(), now)
-        val event = UsageEvents.Event()
-        var current: String? = null
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val eventPackage = event.packageName ?: continue
-            if (isForegroundEvent(event.eventType)) {
-                current = eventPackage
-            } else if (isBackgroundEvent(event.eventType)) {
-                if (current == eventPackage) current = null
-            }
-        }
-        return current
+        return UsageStats.currentForegroundPackage(
+            this,
+            UsageStats.startOfTodayMillis(),
+            now,
+        )
     }
 
     private fun maybeNotifyDailyLimitWarnings(
@@ -214,8 +181,21 @@ class BlockerService : Service() {
     ) {
         val minutes = (remainingSeconds / 60L).coerceAtLeast(1L)
         val notification = notificationBuilder(WARNING_CHANNEL_ID)
-            .setContentTitle("${rule.appName} limit almost reached")
-            .setContentText("Blocking starts in about $minutes min.")
+            .setContentTitle(
+                FocusTraceLocale.getString(
+                    this,
+                    R.string.restriction_warning_title,
+                    rule.appName,
+                )
+            )
+            .setContentText(
+                FocusTraceLocale.getQuantityString(
+                    this,
+                    R.plurals.restriction_warning_minutes,
+                    minutes.toInt(),
+                    minutes,
+                )
+            )
             .setSmallIcon(R.drawable.ic_launcher)
             .setWhen(now)
             .setAutoCancel(true)
@@ -273,7 +253,11 @@ class BlockerService : Service() {
         })
         if (untilMs != null) {
             root.addView(TextView(this).apply {
-                text = "Until ${clock(untilMs)}"
+                text = FocusTraceLocale.getString(
+                    this@BlockerService,
+                    R.string.restriction_until,
+                    clock(untilMs),
+                )
                 setTextColor(Color.rgb(156, 169, 190))
                 textSize = 14f
                 gravity = Gravity.CENTER
@@ -281,7 +265,10 @@ class BlockerService : Service() {
             })
         }
         root.addView(Button(this).apply {
-            text = "Leave"
+            text = FocusTraceLocale.getString(
+                this@BlockerService,
+                R.string.restriction_leave,
+            )
             setOnClickListener {
                 startActivity(
                     Intent(Intent.ACTION_MAIN)
@@ -331,8 +318,18 @@ class BlockerService : Service() {
 
     private fun startForegroundCompat() {
         val notification = notificationBuilder(SERVICE_CHANNEL_ID)
-            .setContentTitle("FocusTrace restrictions active")
-            .setContentText("Watching restricted apps on this device.")
+            .setContentTitle(
+                FocusTraceLocale.getString(
+                    this,
+                    R.string.restriction_service_notification_title,
+                )
+            )
+            .setContentText(
+                FocusTraceLocale.getString(
+                    this,
+                    R.string.restriction_service_notification_body,
+                )
+            )
             .setSmallIcon(R.drawable.ic_launcher)
             .setOngoing(true)
             .build()
@@ -368,7 +365,10 @@ class BlockerService : Service() {
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 SERVICE_CHANNEL_ID,
-                "Restriction service",
+                FocusTraceLocale.getString(
+                    this,
+                    R.string.restriction_service_channel_name,
+                ),
                 NotificationManager.IMPORTANCE_MIN,
             ).apply {
                 setShowBadge(false)
@@ -377,7 +377,10 @@ class BlockerService : Service() {
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 WARNING_CHANNEL_ID,
-                "Restriction warnings",
+                FocusTraceLocale.getString(
+                    this,
+                    R.string.restriction_warning_channel_name,
+                ),
                 NotificationManager.IMPORTANCE_DEFAULT,
             )
         )
@@ -385,9 +388,18 @@ class BlockerService : Service() {
 
     private fun reasonFor(rule: RestrictionRule): String {
         return when (rule.type) {
-            RestrictionRuleType.BlockNow -> "Blocked for now"
-            RestrictionRuleType.DailyLimit -> "Daily limit reached"
-            RestrictionRuleType.Schedule -> "Blocked by schedule"
+            RestrictionRuleType.BlockNow -> FocusTraceLocale.getString(
+                this,
+                R.string.restriction_reason_block_now,
+            )
+            RestrictionRuleType.DailyLimit -> FocusTraceLocale.getString(
+                this,
+                R.string.restriction_reason_daily_limit,
+            )
+            RestrictionRuleType.Schedule -> FocusTraceLocale.getString(
+                this,
+                R.string.restriction_reason_schedule,
+            )
         }
     }
 
@@ -395,30 +407,9 @@ class BlockerService : Service() {
         return SimpleDateFormat("HH:mm", Locale.getDefault()).format(ms)
     }
 
-    private fun startOfToday(): Long {
-        return Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
     private fun currentDayKey(): String {
         val calendar = Calendar.getInstance()
         return "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.DAY_OF_YEAR)}"
-    }
-
-    private fun isForegroundEvent(eventType: Int): Boolean {
-        return eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
-            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                eventType == UsageEvents.Event.ACTIVITY_RESUMED)
-    }
-
-    private fun isBackgroundEvent(eventType: Int): Boolean {
-        return eventType == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                eventType == UsageEvents.Event.ACTIVITY_PAUSED)
     }
 
     private companion object {

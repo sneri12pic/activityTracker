@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/models/usage_item.dart';
+import '../localization/app_localizations_x.dart';
 
 class UsageBubble extends StatelessWidget {
   const UsageBubble({
@@ -9,7 +10,7 @@ class UsageBubble extends StatelessWidget {
     required this.isSelected,
     required this.isBlocked,
     required this.onTap,
-    required this.onLongPress,
+    this.onLongPress,
     super.key,
   });
 
@@ -18,16 +19,17 @@ class UsageBubble extends StatelessWidget {
   final bool isSelected;
   final bool isBlocked;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final diameter = radius * 2;
     final colors = _colorsFor(item.name);
+    final category = context.l10n.usageCategoryLabel(item.category);
 
     return Semantics(
       button: true,
-      label: '${item.name}, ${item.category}',
+      label: context.l10n.usageBubbleSemanticsLabel(item.name, category),
       child: GestureDetector(
         onTap: onTap,
         onLongPress: onLongPress,
@@ -106,7 +108,6 @@ class _BubbleContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconSize = (radius * 0.58).clamp(18.0, 34.0);
-    final labelSize = (radius * 0.34).clamp(11.0, 19.0);
     final iconBytes = item.iconBytes;
 
     return Column(
@@ -119,29 +120,13 @@ class _BubbleContent extends StatelessWidget {
               iconBytes,
               width: iconSize * 1.3,
               height: iconSize * 1.3,
+              cacheWidth: 132,
               fit: BoxFit.cover,
               gaplessPlayback: true,
             ),
           )
         else
           Icon(_iconFor(item.name), color: Colors.white, size: iconSize),
-        if (radius >= 34) ...[
-          const SizedBox(height: 3),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: radius * 0.22),
-            child: Text(
-              item.initials,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: labelSize,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
