@@ -3,8 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/models/app_language.dart';
+import '../localization/app_localizations_x.dart';
 import '../providers.dart';
-import 'restrictions_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -13,9 +14,11 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(settingsViewModelProvider);
     final viewModel = ref.read(settingsViewModelProvider.notifier);
+    final appLanguageState = ref.watch(appLanguageViewModelProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -27,15 +30,13 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Privacy',
+                    l10n.settingsPrivacyTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'FocusTrace stores usage data locally on this device. It does not upload tracked app or window usage.',
-                  ),
+                  Text(l10n.settingsPrivacyBody),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: state.isSaving
@@ -45,6 +46,9 @@ class SettingsScreen extends ConsumerWidget {
                             if (confirmed && context.mounted) {
                               await viewModel.clearLocalData();
                               await ref
+                                  .read(appLanguageViewModelProvider.notifier)
+                                  .restoreAfterDataClear();
+                              await ref
                                   .read(restrictionsViewModelProvider.notifier)
                                   .load();
                               ref
@@ -53,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
                             }
                           },
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear Local Data'),
+                    label: Text(l10n.settingsClearLocalData),
                   ),
                 ],
               ),
@@ -62,20 +66,42 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Card(
             elevation: 0,
-            child: ListTile(
-              leading: const Icon(Icons.lock_outline),
-              title: const Text('App restrictions'),
-              subtitle: const Text(
-                'Block apps now, by daily limit, or schedule',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RestrictionsScreen(),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(l10n.settingsLanguageTitle),
+                  subtitle: Text(
+                    _languageName(context, appLanguageState.language),
                   ),
-                );
-              },
+                  trailing: appLanguageState.isSaving
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: appLanguageState.isLoading || appLanguageState.isSaving
+                      ? null
+                      : () => _showLanguageDialog(
+                          context,
+                          ref,
+                          appLanguageState.language,
+                        ),
+                ),
+                if (appLanguageState.hasError)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        l10n.settingsLanguageUpdateError,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -87,16 +113,14 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Excluded apps',
+                    l10n.settingsExcludedAppsTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   if (state.excludedApps.isEmpty)
-                    const Text(
-                      'No excluded apps. Long-press an app on the dashboard to exclude it from tracking.',
-                    )
+                    Text(l10n.settingsExcludedAppsEmpty)
                   else
                     for (final appKey in state.excludedApps)
                       ListTile(
@@ -107,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         trailing: IconButton(
-                          tooltip: 'Stop excluding',
+                          tooltip: l10n.settingsStopExcluding,
                           icon: const Icon(Icons.undo),
                           onPressed: state.isSaving
                               ? null
@@ -127,7 +151,7 @@ class SettingsScreen extends ConsumerWidget {
           Center(
             child: Chip(
               avatar: const Icon(Icons.hourglass_top, size: 18),
-              label: const Text('Coming soon : Windows Tracking'),
+              label: Text(l10n.settingsWindowsTrackingComingSoon),
               backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
             ),
           ),
@@ -141,8 +165,10 @@ class SettingsScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     _NumberSettingTile(
-                      title: 'Windows tracking interval',
-                      subtitle: '${state.trackingIntervalSeconds} seconds',
+                      title: l10n.settingsWindowsTrackingInterval,
+                      subtitle: l10n.secondsCount(
+                        state.trackingIntervalSeconds,
+                      ),
                       value: state.trackingIntervalSeconds,
                       min: 1,
                       max: 3600,
@@ -150,8 +176,8 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     const Divider(height: 1),
                     _NumberSettingTile(
-                      title: 'Windows idle timeout',
-                      subtitle: '${state.idleTimeoutSeconds} seconds',
+                      title: l10n.settingsWindowsIdleTimeout,
+                      subtitle: l10n.secondsCount(state.idleTimeoutSeconds),
                       value: state.idleTimeoutSeconds,
                       min: 5,
                       max: 86400,
@@ -165,7 +191,7 @@ class SettingsScreen extends ConsumerWidget {
           if (state.errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
-              state.errorMessage!,
+              l10n.commonUnexpectedError,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
@@ -174,23 +200,80 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _showLanguageDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLanguage currentLanguage,
+  ) async {
+    final selectedLanguage = await showDialog<AppLanguage>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(dialogContext.l10n.settingsChooseLanguage),
+          contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final language in AppLanguage.values)
+                  RadioListTile<AppLanguage>(
+                    value: language,
+                    groupValue: currentLanguage,
+                    title: Text(_languageName(dialogContext, language)),
+                    controlAffinity: ListTileControlAffinity.trailing,
+                    onChanged: (selection) {
+                      Navigator.of(dialogContext).pop(selection);
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(dialogContext.l10n.settingsCancel),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (selectedLanguage == null || !context.mounted) {
+      return;
+    }
+    await ref
+        .read(appLanguageViewModelProvider.notifier)
+        .updateLanguage(selectedLanguage);
+  }
+
+  String _languageName(BuildContext context, AppLanguage language) {
+    return switch (language) {
+      AppLanguage.system => context.l10n.settingsLanguageSystemDefault,
+      AppLanguage.english => 'English',
+      AppLanguage.spanish => 'Español',
+      AppLanguage.french => 'Français',
+      AppLanguage.german => 'Deutsch',
+      AppLanguage.portugueseBrazil => 'Português (Brasil)',
+      AppLanguage.japanese => '日本語',
+      AppLanguage.ukrainian => 'Українська',
+    };
+  }
+
   Future<bool> _confirmClearData(BuildContext context) async {
     return await showDialog<bool>(
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Text('Clear local data?'),
-              content: const Text(
-                'This removes stored usage sessions and settings from this device.',
-              ),
+              title: Text(context.l10n.settingsClearDataDialogTitle),
+              content: Text(context.l10n.settingsClearDataDialogBody),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.settingsCancel),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Clear'),
+                  child: Text(context.l10n.settingsClear),
                 ),
               ],
             );
@@ -268,13 +351,13 @@ class _NumberSettingDialogState extends State<_NumberSettingDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${_value.round()} seconds'),
+          Text(context.l10n.secondsCount(_value.round())),
           Slider(
             value: _value.clamp(widget.min.toDouble(), widget.max.toDouble()),
             min: widget.min.toDouble(),
             max: widget.max.toDouble(),
             divisions: 20,
-            label: '${_value.round()}s',
+            label: context.l10n.secondsCount(_value.round()),
             onChanged: (value) => setState(() => _value = value),
           ),
         ],
@@ -282,11 +365,11 @@ class _NumberSettingDialogState extends State<_NumberSettingDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.settingsCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_value.round()),
-          child: const Text('Save'),
+          child: Text(context.l10n.settingsSave),
         ),
       ],
     );

@@ -1,8 +1,6 @@
 package com.example.focustrace
 
 import android.Manifest
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -17,7 +15,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
-import java.util.Calendar
+import java.io.File
 
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -40,6 +38,10 @@ class MainActivity : FlutterActivity() {
                     }
                     "requestNotificationsPermission" -> {
                         requestNotificationsPermission()
+                        result.success(null)
+                    }
+                    "setAppLocale" -> {
+                        setAppLocale(call.arguments as? String)
                         result.success(null)
                     }
                     "syncRestrictions" -> {
@@ -69,11 +71,23 @@ class MainActivity : FlutterActivity() {
                         if (!hasUsageAccess()) {
                             result.error(
                                 "USAGE_ACCESS_DENIED",
-                                "Usage access permission has not been granted.",
+                                FocusTraceLocale.getString(this, R.string.usage_access_denied),
                                 null
                             )
                         } else {
-                            result.success(getTodayUsageStats())
+                            // Event parsing plus icon encoding takes ~1s cold;
+                            // keep it off the main thread.
+                            Thread {
+                                try {
+                                    val stats = getTodayUsageStats()
+                                    runOnUiThread { result.success(stats) }
+                                } catch (e: Exception) {
+                                    Log.e(LOG_TAG, "getTodayUsageStats failed", e)
+                                    runOnUiThread {
+                                        result.error("USAGE_STATS_FAILED", e.message, null)
+                                    }
+                                }
+                            }.start()
                         }
                     }
                     else -> result.notImplemented()
@@ -128,6 +142,20 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun setAppLocale(languageTag: String?) {
+        if (!FocusTraceLocale.setLanguageTag(this, languageTag)) return
+
+        UsageWidgetProvider.refreshAll(this)
+
+        // Recreate the service so an existing overlay and foreground
+        // notification immediately use the newly selected language.
+        val json = getSharedPreferences(RestrictionRules.PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(RestrictionRules.PREFS_RULES_KEY, null)
+            ?: ""
+        stopService(Intent(this, BlockerService::class.java))
+        syncRestrictions(json)
+    }
+
     private fun syncRestrictions(json: String) {
         getSharedPreferences(RestrictionRules.PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
@@ -150,71 +178,25 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun getTodayUsageStats(): List<Map<String, Any?>> {
-        val usageStatsManager =
-            getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val now = System.currentTimeMillis()
-        val startOfToday = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
-        val totals = HashMap<String, Long>()
-        val foregroundSince = HashMap<String, Long>()
-        val lastUsed = HashMap<String, Long>()
-
-        val events = usageStatsManager.queryEvents(startOfToday, now)
-        val event = UsageEvents.Event()
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val packageName = event.packageName ?: continue
-            when (event.eventType) {
-                UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-                    foregroundSince[packageName] = event.timeStamp
-                    lastUsed[packageName] = event.timeStamp
-                }
-                UsageEvents.Event.MOVE_TO_BACKGROUND -> {
-                    val start = foregroundSince.remove(packageName)
-                    if (start != null && event.timeStamp > start) {
-                        totals[packageName] =
-                            (totals[packageName] ?: 0L) + (event.timeStamp - start)
-                    }
-                    lastUsed[packageName] = event.timeStamp
-                }
-            }
-        }
-
-        // Apps still in the foreground at query time have no closing event.
-        for ((packageName, start) in foregroundSince) {
-            if (now > start) {
-                totals[packageName] = (totals[packageName] ?: 0L) + (now - start)
-                lastUsed[packageName] = now
-            }
-        }
-
-        return totals
-            .filter { it.value > 0L && isUserFacingApp(it.key) }
-            .map { (packageName, totalMs) ->
-                val lastUsedMs = lastUsed[packageName] ?: now
+        val startOfToday = UsageStats.startOfTodayMillis()
+        return UsageStats.todayTotals(this)
+            .map { (packageName, usage) ->
                 mapOf(
                     "packageName" to packageName,
                     "appName" to appLabelFor(packageName),
                     "iconBytes" to appIconFor(packageName),
-                    "totalTimeInForegroundMs" to totalMs,
+                    "totalTimeInForegroundMs" to usage.totalMs,
                     "firstTimeStampMs" to startOfToday,
-                    "lastTimeStampMs" to lastUsedMs,
-                    "lastTimeUsedMs" to lastUsedMs
+                    "lastTimeStampMs" to usage.lastUsedMs,
+                    "lastTimeUsedMs" to usage.lastUsedMs
                 )
             }
             .sortedByDescending { it["totalTimeInForegroundMs"] as Long }
     }
 
-    // ponytail: launchable-in-app-drawer is the system-app filter; whitelist packages here if a wanted app gets dropped.
     private fun isUserFacingApp(packageName: String): Boolean {
-        return packageManager.getLaunchIntentForPackage(packageName) != null
+        return UsageStats.isUserFacingApp(this, packageName)
     }
 
     /** All launchable apps: popular apps first, then the rest by label. */
@@ -250,10 +232,21 @@ class MainActivity : FlutterActivity() {
 
     private val iconCache = HashMap<String, ByteArray?>()
 
-    // Called from both the main thread (usage stats) and the installed-apps
-    // worker thread, so the cache access must be synchronized.
+    // Called from worker threads (usage stats, installed apps), so the cache
+    // access must be synchronized. Encoded icons are also persisted to
+    // cacheDir: cold app starts read ~1ms files instead of re-drawing and
+    // PNG-encoding every icon (~1s for a day's worth of apps).
+    // ponytail: stale if an app updates its icon; Android clears cacheDir under storage pressure anyway.
     private fun appIconFor(packageName: String): ByteArray? = synchronized(iconCache) {
         return iconCache.getOrPut(packageName) {
+            val cacheFile = File(File(cacheDir, "app_icons"), "$packageName.png")
+            try {
+                if (cacheFile.exists()) {
+                    return@getOrPut cacheFile.readBytes()
+                }
+            } catch (_: Exception) {
+                // Unreadable cache entry: fall through and re-encode.
+            }
             try {
                 val drawable = packageManager.getApplicationIcon(packageName)
                 val size = 128
@@ -263,7 +256,14 @@ class MainActivity : FlutterActivity() {
                 val out = ByteArrayOutputStream()
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 bitmap.recycle()
-                out.toByteArray()
+                val bytes = out.toByteArray()
+                try {
+                    cacheFile.parentFile?.mkdirs()
+                    cacheFile.writeBytes(bytes)
+                } catch (_: Exception) {
+                    // Cache write is best-effort.
+                }
+                bytes
             } catch (_: Exception) {
                 null
             }
@@ -271,12 +271,13 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun appLabelFor(packageName: String): String {
-        return try {
-            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-            packageManager.getApplicationLabel(applicationInfo).toString()
-        } catch (_: PackageManager.NameNotFoundException) {
-            packageName
-        }
+        return UsageStats.appLabelFor(this, packageName)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // The user is heading to the home screen; show them fresh numbers there.
+        UsageWidgetProvider.refreshAll(this)
     }
 
     private companion object {

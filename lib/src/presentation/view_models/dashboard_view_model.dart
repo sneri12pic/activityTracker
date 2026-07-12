@@ -12,6 +12,7 @@ class DashboardState {
     required this.summaries,
     required this.totalDurationSeconds,
     required this.hasUsageAccess,
+    this.dayOffset = 0,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -30,13 +31,24 @@ class DashboardState {
   final List<AppUsageSummary> summaries;
   final int totalDurationSeconds;
   final bool hasUsageAccess;
+
+  /// 0 = today, -1 = yesterday, and so on.
+  final int dayOffset;
   final bool isLoading;
   final String? errorMessage;
+
+  bool get isToday => dayOffset == 0;
+
+  DateTime get selectedDate {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day + dayOffset);
+  }
 
   DashboardState copyWith({
     List<AppUsageSummary>? summaries,
     int? totalDurationSeconds,
     bool? hasUsageAccess,
+    int? dayOffset,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -46,6 +58,7 @@ class DashboardState {
       summaries: summaries ?? this.summaries,
       totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
       hasUsageAccess: hasUsageAccess ?? this.hasUsageAccess,
+      dayOffset: dayOffset ?? this.dayOffset,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
@@ -67,6 +80,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   final UsageRepository _usageRepository;
   final SettingsRepository _settingsRepository;
   final UsageAggregationService _aggregationService;
+  int _loadGeneration = 0;
 
   Future<void> loadTodayUsage({bool showLoading = true}) async {
     // ponytail: showLoading=false skips the spinner so the 5s auto-refresh
@@ -74,9 +88,17 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     if (showLoading) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
+    final generation = ++_loadGeneration;
+    final dayOffset = state.dayOffset;
+    final isToday = dayOffset == 0;
+    final now = DateTime.now();
+    final selectedDate = DateTime(now.year, now.month, now.day + dayOffset);
     try {
       final hasAccess = await _usageRepository.hasUsageAccess();
-      if (state.platform == UsagePlatform.android && !hasAccess) {
+      if (generation != _loadGeneration) {
+        return;
+      }
+      if (state.platform == UsagePlatform.android && isToday && !hasAccess) {
         state = state.copyWith(
           summaries: const <AppUsageSummary>[],
           totalDurationSeconds: 0,
@@ -86,11 +108,19 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         return;
       }
 
+      final rawSummaries = isToday
+          ? await _usageRepository.getTodaySummaries()
+          : await _usageRepository.getDailySummaries(selectedDate);
       final summaries = _applyFilters(
-        await _usageRepository.getTodaySummaries(),
+        rawSummaries,
         await _settingsRepository.excludedApps(),
-        await _settingsRepository.hiddenAppsForToday(),
+        isToday
+            ? await _settingsRepository.hiddenAppsForToday()
+            : const <String>{},
       );
+      if (generation != _loadGeneration) {
+        return;
+      }
       state = state.copyWith(
         summaries: summaries,
         totalDurationSeconds: _aggregationService.totalDurationSeconds(
@@ -100,17 +130,45 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         isLoading: false,
       );
     } catch (error) {
-      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+      if (generation == _loadGeneration) {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: error.toString(),
+        );
+      }
     }
   }
 
   Future<void> refresh() => loadTodayUsage();
 
-  Future<void> refreshSilently() => loadTodayUsage(showLoading: false);
+  Future<void> refreshSilently() {
+    // Past-day snapshots don't change; only live "today" needs the tick.
+    if (!state.isToday) {
+      return Future.value();
+    }
+    return loadTodayUsage(showLoading: false);
+  }
+
+  Future<void> previousDay() => _selectDayOffset(state.dayOffset - 1);
+
+  Future<void> nextDay() {
+    if (state.isToday) {
+      return Future.value();
+    }
+    return _selectDayOffset(state.dayOffset + 1);
+  }
+
+  Future<void> _selectDayOffset(int offset) {
+    state = state.copyWith(dayOffset: offset);
+    return loadTodayUsage();
+  }
 
   Future<void> checkPermission() async {
     final hasAccess = await _usageRepository.hasUsageAccess();
     state = state.copyWith(hasUsageAccess: hasAccess);
+    if (hasAccess && state.isToday) {
+      await loadTodayUsage();
+    }
   }
 
   Future<void> openPermissionSettings() async {
@@ -135,7 +193,10 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
   }
 
   Future<List<UsageSession>> topSessionsForApp(AppUsageSummary summary) {
-    return _usageRepository.topSessionsForApp(summary.appKey, DateTime.now());
+    return _usageRepository.topSessionsForApp(
+      summary.appKey,
+      state.selectedDate,
+    );
   }
 
   List<AppUsageSummary> _applyFilters(
@@ -155,15 +216,6 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     }
 
     // Recompute shares so percentages reflect only the visible apps.
-    final totalSeconds = _aggregationService.totalDurationSeconds(visible);
-    return visible
-        .map(
-          (summary) => summary.copyWith(
-            percentageOfTotal: totalSeconds == 0
-                ? 0
-                : summary.totalDurationSeconds / totalSeconds,
-          ),
-        )
-        .toList();
+    return _aggregationService.withPercentages(visible);
   }
 }

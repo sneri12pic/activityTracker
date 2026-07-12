@@ -34,6 +34,26 @@ class UsageRepositoryImpl implements UsageRepository {
 
   @override
   Future<List<AppUsageSummary>> getTodaySummaries() async {
+    final summaries = _aggregationService.withPercentages(
+      await _fetchTodaySummaries(),
+    );
+    try {
+      // Snapshot today's totals so history stays queryable for statistics.
+      await _localDataSource.saveDailySummaries(DateTime.now(), summaries);
+    } catch (_) {
+      // History is best-effort; never block the dashboard on a storage error.
+    }
+    return summaries;
+  }
+
+  @override
+  Future<List<AppUsageSummary>> getDailySummaries(DateTime day) async {
+    return _aggregationService.withPercentages(
+      await _localDataSource.getDailySummaries(day),
+    );
+  }
+
+  Future<List<AppUsageSummary>> _fetchTodaySummaries() async {
     switch (_platform) {
       case UsagePlatform.android:
         return _platformDataSource.getTodayUsageStats();

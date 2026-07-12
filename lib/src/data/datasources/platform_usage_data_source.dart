@@ -13,7 +13,7 @@ class ActiveWindowInfo {
   final String windowTitle;
   final double idleSeconds;
 
-  String get appName => processName.isEmpty ? 'Unknown app' : processName;
+  String get appName => processName;
 }
 
 abstract class PlatformUsageDataSource {
@@ -91,20 +91,7 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
         .map((row) => _summaryFromAndroidMap(Map<String, Object?>.from(row)))
         .toList();
 
-    final totalSeconds = summaries.fold<int>(
-      0,
-      (total, summary) => total + summary.totalDurationSeconds,
-    );
-
-    return summaries
-        .map(
-          (summary) => summary.copyWith(
-            percentageOfTotal: totalSeconds == 0
-                ? 0
-                : summary.totalDurationSeconds / totalSeconds,
-          ),
-        )
-        .toList();
+    return summaries;
   }
 
   @override
@@ -123,11 +110,25 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
         .toList();
   }
 
+  // Each channel fetch delivers fresh byte arrays; Flutter's image cache is
+  // keyed by object identity, so new bytes force a full PNG re-decode of every
+  // icon. Icons rarely change — reuse the first-seen bytes per package.
+  final _iconBytesByPackage = <String, Uint8List>{};
+
   AppUsageSummary _summaryFromAndroidMap(Map<String, Object?> row) {
     final durationMs = (row['totalTimeInForegroundMs'] as num?)?.toInt() ?? 0;
     final lastUsedMs = (row['lastTimeUsedMs'] as num?)?.toInt();
     final packageName = row['packageName'] as String?;
-    final appName = row['appName'] as String? ?? packageName ?? 'Unknown app';
+    final appName = row['appName'] as String? ?? packageName ?? '';
+
+    var iconBytes = row['iconBytes'] as Uint8List?;
+    final freshIconBytes = iconBytes;
+    if (freshIconBytes != null && packageName != null) {
+      iconBytes = _iconBytesByPackage.putIfAbsent(
+        packageName,
+        () => freshIconBytes,
+      );
+    }
 
     return AppUsageSummary(
       appName: appName,
@@ -137,7 +138,7 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
       lastUsedAt: lastUsedMs == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastUsedMs),
-      iconBytes: row['iconBytes'] as Uint8List?,
+      iconBytes: iconBytes,
     );
   }
 }

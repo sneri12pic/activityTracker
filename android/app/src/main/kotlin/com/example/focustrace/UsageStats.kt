@@ -1,0 +1,122 @@
+package com.example.focustrace
+
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import java.util.Calendar
+
+/** Today's per-app foreground time, shared by MainActivity and the home widget. */
+object UsageStats {
+    data class AppUsage(val totalMs: Long, val lastUsedMs: Long)
+
+    fun startOfTodayMillis(): Long = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    fun todayTotals(context: Context): Map<String, AppUsage> {
+        val now = System.currentTimeMillis()
+        return foregroundTotals(context, startOfTodayMillis(), now)
+            .filter { it.value.totalMs > 0L && isUserFacingApp(context, it.key) }
+    }
+
+    fun foregroundTotals(
+        context: Context,
+        fromMs: Long,
+        toMs: Long,
+        packageNames: Set<String>? = null,
+    ): Map<String, AppUsage> {
+        val usageStatsManager =
+            context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val totals = HashMap<String, Long>()
+        val foregroundSince = HashMap<String, Long>()
+        val lastUsed = HashMap<String, Long>()
+
+        val events = usageStatsManager.queryEvents(fromMs, toMs)
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val packageName = event.packageName ?: continue
+            if (packageNames != null && packageName !in packageNames) continue
+            if (isForegroundEvent(event.eventType)) {
+                // Some Android versions emit both the legacy MOVE event and
+                // ACTIVITY_RESUMED. Keep the first timestamp to avoid losing
+                // the beginning of the foreground interval.
+                foregroundSince.putIfAbsent(packageName, event.timeStamp)
+                lastUsed[packageName] = event.timeStamp
+            } else if (isBackgroundEvent(event.eventType)) {
+                val start = foregroundSince.remove(packageName)
+                if (start != null && event.timeStamp > start) {
+                    totals[packageName] =
+                        (totals[packageName] ?: 0L) + (event.timeStamp - start)
+                }
+                lastUsed[packageName] = event.timeStamp
+            }
+        }
+
+        // Apps still in the foreground at query time have no closing event.
+        for ((packageName, start) in foregroundSince) {
+            if (toMs > start) {
+                totals[packageName] = (totals[packageName] ?: 0L) + (toMs - start)
+                lastUsed[packageName] = toMs
+            }
+        }
+
+        return totals
+            .filterValues { it > 0L }
+            .mapValues { (packageName, totalMs) ->
+                AppUsage(totalMs, lastUsed[packageName] ?: toMs)
+            }
+    }
+
+    fun currentForegroundPackage(context: Context, fromMs: Long, toMs: Long): String? {
+        val usageStatsManager =
+            context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val events = usageStatsManager.queryEvents(fromMs, toMs)
+        val event = UsageEvents.Event()
+        var current: String? = null
+        while (events.hasNextEvent()) {
+            events.getNextEvent(event)
+            val packageName = event.packageName ?: continue
+            if (isForegroundEvent(event.eventType)) {
+                current = packageName
+            } else if (isBackgroundEvent(event.eventType) && current == packageName) {
+                current = null
+            }
+        }
+        return current
+    }
+
+    // ponytail: launchable-in-app-drawer is the system-app filter; whitelist packages here if a wanted app gets dropped.
+    fun isUserFacingApp(context: Context, packageName: String): Boolean {
+        return context.packageManager.getLaunchIntentForPackage(packageName) != null
+    }
+
+    fun appLabelFor(context: Context, packageName: String): String {
+        return try {
+            val applicationInfo =
+                context.packageManager.getApplicationInfo(packageName, 0)
+            context.packageManager.getApplicationLabel(applicationInfo).toString()
+        } catch (_: PackageManager.NameNotFoundException) {
+            packageName
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isForegroundEvent(eventType: Int): Boolean {
+        return eventType == UsageEvents.Event.MOVE_TO_FOREGROUND ||
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                eventType == UsageEvents.Event.ACTIVITY_RESUMED)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun isBackgroundEvent(eventType: Int): Boolean {
+        return eventType == UsageEvents.Event.MOVE_TO_BACKGROUND ||
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                eventType == UsageEvents.Event.ACTIVITY_PAUSED)
+    }
+}

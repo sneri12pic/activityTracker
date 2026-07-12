@@ -4,11 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../application/utils/duration_format.dart';
 import '../../domain/models/app_usage_summary.dart';
 import '../../domain/models/usage_session.dart';
+import '../localization/app_localizations_x.dart';
 import '../providers.dart';
-import 'dashboard_screen.dart';
+import 'home_shell.dart';
 import 'restriction_editor_sheet.dart';
 
 const _ctaGradient = LinearGradient(
@@ -28,7 +28,7 @@ class OnboardingGate extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (state.isCompleted) {
-      return const DashboardScreen();
+      return const HomeShell();
     }
     return const OnboardingScreen();
   }
@@ -104,7 +104,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     onPressed: onboardingState.isSaving
                         ? null
                         : () => onboardingViewModel.skip(),
-                    child: const Text('Skip'),
+                    child: Text(context.l10n.onboardingSkip),
                   ),
                 ),
               ),
@@ -138,10 +138,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     switch (_page) {
       case 0:
-        return _GradientButton(label: 'Get started', onPressed: () => _goTo(1));
+        return _GradientButton(
+          label: context.l10n.onboardingGetStarted,
+          onPressed: () => _goTo(1),
+        );
       case 1:
         return _GradientButton(
-          label: 'Continue',
+          label: context.l10n.onboardingContinue,
           onPressed: () {
             ref
                 .read(restrictionsViewModelProvider.notifier)
@@ -154,7 +157,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             _GradientButton(
-              label: 'Start soft blocks',
+              label: context.l10n.onboardingStartSoftBlocks,
               onPressed:
                   onboardingState.isSaving ||
                       onboardingState.selectedAppKeys.isEmpty
@@ -166,7 +169,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               onPressed: onboardingState.isSaving
                   ? null
                   : () => onboardingViewModel.skip(),
-              child: const Text('Choose later'),
+              child: Text(context.l10n.onboardingChooseLater),
             ),
           ],
         );
@@ -188,7 +191,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
         children: [
           Text(
-            'Choose what to limit',
+            context.l10n.onboardingChooseWhatToLimit,
             textAlign: TextAlign.center,
             style: textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
@@ -196,7 +199,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Select apps and set a daily target for soft blocks.',
+            context.l10n.onboardingChooseWhatToLimitDescription,
             textAlign: TextAlign.center,
             style: textTheme.bodyMedium?.copyWith(
               color: Theme.of(
@@ -219,15 +222,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               child: Center(child: CircularProgressIndicator()),
             )
           else if (allApps.isEmpty)
-            const _OnboardingInfoCard(
-              title: 'No apps to choose yet',
-              body:
-                  'FocusTrace needs current usage data before it can show apps here. You can skip setup and add restrictions later from Settings.',
+            _OnboardingInfoCard(
+              title: context.l10n.onboardingNoAppsToChooseTitle,
+              body: context.l10n.onboardingNoAppsToChooseBody,
             )
           else if (summaries.isEmpty)
-            const _OnboardingInfoCard(
-              title: 'No matching apps',
-              body: 'Try a different search term.',
+            _OnboardingInfoCard(
+              title: context.l10n.onboardingNoMatchingAppsTitle,
+              body: context.l10n.onboardingNoMatchingAppsBody,
             )
           else
             for (final summary in summaries)
@@ -243,7 +245,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           if (onboardingState.errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
-              onboardingState.errorMessage!,
+              context.l10n.commonUnexpectedError,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
@@ -316,7 +318,7 @@ class _WelcomePage extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
           Text(
-            'Take back your screen time',
+            context.l10n.onboardingWelcomeTitle,
             textAlign: TextAlign.center,
             style: textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w800,
@@ -324,9 +326,7 @@ class _WelcomePage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Understand where your attention goes.\n'
-            'Set gentle limits.\n'
-            'Build better habits at your pace.',
+            context.l10n.onboardingWelcomeBody,
             textAlign: TextAlign.center,
             style: textTheme.bodyMedium?.copyWith(
               color: Theme.of(
@@ -380,6 +380,7 @@ class _AppOrbit extends ConsumerWidget {
             icons[i],
             width: 40,
             height: 40,
+            cacheWidth: 120,
             fit: BoxFit.cover,
             gaplessPlayback: true,
           ),
@@ -505,7 +506,7 @@ class _AccessPage extends ConsumerWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          'Give FocusTrace access',
+          context.l10n.onboardingAccessTitle,
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w800,
@@ -513,8 +514,7 @@ class _AccessPage extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'FocusTrace needs two permissions to work.\n'
-          'Everything stays on your device.',
+          context.l10n.onboardingAccessBody,
           textAlign: TextAlign.center,
           style: mutedStyle,
         ),
@@ -536,15 +536,15 @@ class _AccessPage extends ConsumerWidget {
         ),
         const SizedBox(height: 28),
         if (!isAndroid)
-          const _OnboardingInfoCard(
-            title: 'Nothing to grant here',
-            body: 'These permissions are only needed on Android.',
+          _OnboardingInfoCard(
+            title: context.l10n.onboardingNoPermissionsTitle,
+            body: context.l10n.onboardingNoPermissionsBody,
           )
         else ...[
           _PermissionTile(
             icon: Icons.insert_chart_outlined,
-            title: 'Usage access',
-            subtitle: 'To measure your app time',
+            title: context.l10n.onboardingUsageAccessTitle,
+            subtitle: context.l10n.onboardingUsageAccessSubtitle,
             isGranted: dashboardState.hasUsageAccess,
             onAllow: ref
                 .read(dashboardViewModelProvider.notifier)
@@ -553,8 +553,8 @@ class _AccessPage extends ConsumerWidget {
           const SizedBox(height: 12),
           _PermissionTile(
             icon: Icons.picture_in_picture_alt_outlined,
-            title: 'Display over other apps',
-            subtitle: 'To show the block screen over apps you limit',
+            title: context.l10n.onboardingOverlayAccessTitle,
+            subtitle: context.l10n.onboardingOverlayAccessSubtitle,
             isGranted: restrictionsState.hasOverlayPermission,
             onAllow: () => ref
                 .read(restrictionsViewModelProvider.notifier)
@@ -571,7 +571,10 @@ class _AccessPage extends ConsumerWidget {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 6),
-            Text('You can change this later in settings.', style: mutedStyle),
+            Text(
+              context.l10n.onboardingPermissionsSettingsHint,
+              style: mutedStyle,
+            ),
           ],
         ),
       ],
@@ -646,7 +649,7 @@ class _PermissionTile extends StatelessWidget {
               )
             else
               _GradientButton(
-                label: 'Allow',
+                label: context.l10n.onboardingAllow,
                 onPressed: onAllow,
                 compact: true,
               ),
@@ -741,7 +744,7 @@ class _SearchBarBox extends StatelessWidget {
       child: TextField(
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.search),
-          hintText: 'Search apps',
+          hintText: context.l10n.onboardingSearchApps,
           filled: true,
           fillColor: Colors.transparent,
           border: OutlineInputBorder(
@@ -798,7 +801,10 @@ class _SelectableAppTile extends StatelessWidget {
         subtitle: Text(
           summary.totalDurationSeconds == 0
               ? summary.appKey
-              : '${summary.appKey} · ${DurationFormat.compact(summary.totalDuration)} today',
+              : context.l10n.onboardingAppUsageToday(
+                  summary.appKey,
+                  context.l10n.compactDuration(summary.totalDuration),
+                ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -835,14 +841,14 @@ class _DailyTargetTile extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Daily target',
+                  context.l10n.onboardingDailyTarget,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  DurationFormat.compact(Duration(minutes: limitMinutes)),
+                  context.l10n.compactDuration(Duration(minutes: limitMinutes)),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.primary,
@@ -855,14 +861,22 @@ class _DailyTargetTile extends StatelessWidget {
               min: 30,
               max: 480,
               divisions: 30,
-              label: DurationFormat.compact(Duration(minutes: limitMinutes)),
+              label: context.l10n.compactDuration(
+                Duration(minutes: limitMinutes),
+              ),
               onChanged: isEnabled ? (value) => onChanged(value.round()) : null,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('30m', style: rangeStyle),
-                Text('8h', style: rangeStyle),
+                Text(
+                  context.l10n.compactDuration(const Duration(minutes: 30)),
+                  style: rangeStyle,
+                ),
+                Text(
+                  context.l10n.compactDuration(const Duration(hours: 8)),
+                  style: rangeStyle,
+                ),
               ],
             ),
           ],
@@ -883,9 +897,10 @@ class _AppIcon extends StatelessWidget {
     if (iconBytes != null) {
       return ClipOval(
         child: Image.memory(
-          Uint8List.fromList(iconBytes),
+          iconBytes,
           width: 40,
           height: 40,
+          cacheWidth: 120,
           fit: BoxFit.cover,
           gaplessPlayback: true,
         ),
