@@ -461,6 +461,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Demnächst: Erfassung unter Windows';
 
   @override
+  String get settingsSendFeedback => 'Feedback senden';
+
+  @override
   String get settingsWindowsTrackingInterval =>
       'Erfassungsintervall unter Windows';
 

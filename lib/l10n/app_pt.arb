@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "Nenhum app excluído. Toque e segure um app no painel para excluí-lo do rastreamento.",
   "settingsStopExcluding": "Parar de excluir",
   "settingsWindowsTrackingComingSoon": "Em breve: rastreamento no Windows",
+  "settingsSendFeedback": "Enviar feedback",
   "settingsWindowsTrackingInterval": "Intervalo de rastreamento no Windows",
   "settingsWindowsIdleTimeout": "Tempo limite de inatividade do Windows",
   "settingsClearDataDialogTitle": "Limpar dados locais?",

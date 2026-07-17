@@ -1,4 +1,4 @@
-package com.example.focustrace
+package com.stepandemianenko.focustrace
 
 import org.json.JSONArray
 import org.json.JSONObject

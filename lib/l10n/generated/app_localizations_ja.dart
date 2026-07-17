@@ -435,6 +435,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsWindowsTrackingComingSoon => '近日公開: Windows追跡';
 
   @override
+  String get settingsSendFeedback => 'フィードバックを送信';
+
+  @override
   String get settingsWindowsTrackingInterval => 'Windowsの追跡間隔';
 
   @override

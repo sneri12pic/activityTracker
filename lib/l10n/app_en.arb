@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "No excluded apps. Long-press an app on the dashboard to exclude it from tracking.",
   "settingsStopExcluding": "Stop excluding",
   "settingsWindowsTrackingComingSoon": "Coming soon: Windows tracking",
+  "settingsSendFeedback": "Send feedback",
   "settingsWindowsTrackingInterval": "Windows tracking interval",
   "settingsWindowsIdleTimeout": "Windows idle timeout",
   "settingsClearDataDialogTitle": "Clear local data?",

@@ -465,6 +465,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Próximamente: seguimiento en Windows';
 
   @override
+  String get settingsSendFeedback => 'Enviar comentarios';
+
+  @override
   String get settingsWindowsTrackingInterval =>
       'Intervalo de seguimiento en Windows';
 

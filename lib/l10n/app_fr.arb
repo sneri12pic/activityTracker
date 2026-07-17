@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "Aucune application exclue. Appuyez longuement sur une application du tableau de bord pour l’exclure du suivi.",
   "settingsStopExcluding": "Ne plus exclure",
   "settingsWindowsTrackingComingSoon": "Bientôt disponible : suivi Windows",
+  "settingsSendFeedback": "Envoyer un commentaire",
   "settingsWindowsTrackingInterval": "Intervalle de suivi Windows",
   "settingsWindowsIdleTimeout": "Délai d’inactivité Windows",
   "settingsClearDataDialogTitle": "Effacer les données locales ?",

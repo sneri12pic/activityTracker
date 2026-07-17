@@ -1,4 +1,4 @@
-package com.example.focustrace
+package com.stepandemianenko.focustrace
 
 import android.content.Context
 import android.content.res.Configuration

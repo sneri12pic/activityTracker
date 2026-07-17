@@ -470,6 +470,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Bientôt disponible : suivi Windows';
 
   @override
+  String get settingsSendFeedback => 'Envoyer un commentaire';
+
+  @override
   String get settingsWindowsTrackingInterval => 'Intervalle de suivi Windows';
 
   @override

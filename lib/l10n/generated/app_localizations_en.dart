@@ -453,6 +453,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Coming soon: Windows tracking';
 
   @override
+  String get settingsSendFeedback => 'Send feedback';
+
+  @override
   String get settingsWindowsTrackingInterval => 'Windows tracking interval';
 
   @override

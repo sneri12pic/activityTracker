@@ -867,6 +867,12 @@ abstract class AppLocalizations {
   /// **'Coming soon: Windows tracking'**
   String get settingsWindowsTrackingComingSoon;
 
+  /// No description provided for @settingsSendFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Send feedback'**
+  String get settingsSendFeedback;
+
   /// No description provided for @settingsWindowsTrackingInterval.
   ///
   /// In en, this message translates to:

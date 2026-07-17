@@ -1,4 +1,4 @@
-package com.example.focustrace
+package com.stepandemianenko.focustrace
 
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager

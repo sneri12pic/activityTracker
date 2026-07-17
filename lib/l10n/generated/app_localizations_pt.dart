@@ -457,6 +457,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Em breve: rastreamento no Windows';
 
   @override
+  String get settingsSendFeedback => 'Enviar feedback';
+
+  @override
   String get settingsWindowsTrackingInterval =>
       'Intervalo de rastreamento no Windows';
 

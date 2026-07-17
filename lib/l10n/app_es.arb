@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "No hay aplicaciones excluidas. Mantén pulsada una aplicación en el panel para excluirla del seguimiento.",
   "settingsStopExcluding": "Dejar de excluir",
   "settingsWindowsTrackingComingSoon": "Próximamente: seguimiento en Windows",
+  "settingsSendFeedback": "Enviar comentarios",
   "settingsWindowsTrackingInterval": "Intervalo de seguimiento en Windows",
   "settingsWindowsIdleTimeout": "Tiempo de inactividad de Windows",
   "settingsClearDataDialogTitle": "¿Borrar los datos locales?",

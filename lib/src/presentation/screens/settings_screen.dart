@@ -1,7 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/models/app_language.dart';
 import '../localization/app_localizations_x.dart';
@@ -148,42 +147,19 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Center(
-            child: Chip(
-              avatar: const Icon(Icons.hourglass_top, size: 18),
-              label: Text(l10n.settingsWindowsTrackingComingSoon),
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // ponytail: settings disabled for Play release, unblur when Windows sync ships
-          IgnorePointer(
-            child: ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-              child: Card(
-                elevation: 0,
-                child: Column(
-                  children: [
-                    _NumberSettingTile(
-                      title: l10n.settingsWindowsTrackingInterval,
-                      subtitle: l10n.secondsCount(
-                        state.trackingIntervalSeconds,
-                      ),
-                      value: state.trackingIntervalSeconds,
-                      min: 1,
-                      max: 3600,
-                      onChanged: (_) {},
-                    ),
-                    const Divider(height: 1),
-                    _NumberSettingTile(
-                      title: l10n.settingsWindowsIdleTimeout,
-                      subtitle: l10n.secondsCount(state.idleTimeoutSeconds),
-                      value: state.idleTimeoutSeconds,
-                      min: 5,
-                      max: 86400,
-                      onChanged: (_) {},
-                    ),
-                  ],
+          // ponytail: Windows tracking card removed for Play release, restore
+          // from git history when Windows sync ships.
+          Card(
+            elevation: 0,
+            child: ListTile(
+              leading: const Icon(Icons.mail_outline),
+              title: Text(l10n.settingsSendFeedback),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => launchUrl(
+                Uri(
+                  scheme: 'mailto',
+                  path: 'stepan.demyanenko30@gmail.com',
+                  queryParameters: {'subject': 'FocusTrace feedback'},
                 ),
               ),
             ),
@@ -280,98 +256,5 @@ class SettingsScreen extends ConsumerWidget {
           },
         ) ??
         false;
-  }
-}
-
-class _NumberSettingTile extends StatelessWidget {
-  const _NumberSettingTile({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String subtitle;
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () async {
-        final selected = await showDialog<int>(
-          context: context,
-          builder: (context) => _NumberSettingDialog(
-            title: title,
-            value: value,
-            min: min,
-            max: max,
-          ),
-        );
-        if (selected != null) {
-          onChanged(selected);
-        }
-      },
-    );
-  }
-}
-
-class _NumberSettingDialog extends StatefulWidget {
-  const _NumberSettingDialog({
-    required this.title,
-    required this.value,
-    required this.min,
-    required this.max,
-  });
-
-  final String title;
-  final int value;
-  final int min;
-  final int max;
-
-  @override
-  State<_NumberSettingDialog> createState() => _NumberSettingDialogState();
-}
-
-class _NumberSettingDialogState extends State<_NumberSettingDialog> {
-  late double _value = widget.value.toDouble();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(context.l10n.secondsCount(_value.round())),
-          Slider(
-            value: _value.clamp(widget.min.toDouble(), widget.max.toDouble()),
-            min: widget.min.toDouble(),
-            max: widget.max.toDouble(),
-            divisions: 20,
-            label: context.l10n.secondsCount(_value.round()),
-            onChanged: (value) => setState(() => _value = value),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.settingsCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_value.round()),
-          child: Text(context.l10n.settingsSave),
-        ),
-      ],
-    );
   }
 }

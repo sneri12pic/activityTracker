@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "除外したアプリはありません。ダッシュボードでアプリを長押しすると、追跡から除外できます。",
   "settingsStopExcluding": "除外を解除",
   "settingsWindowsTrackingComingSoon": "近日公開: Windows追跡",
+  "settingsSendFeedback": "フィードバックを送信",
   "settingsWindowsTrackingInterval": "Windowsの追跡間隔",
   "settingsWindowsIdleTimeout": "Windowsのアイドルタイムアウト",
   "settingsClearDataDialogTitle": "ローカルデータを削除しますか？",

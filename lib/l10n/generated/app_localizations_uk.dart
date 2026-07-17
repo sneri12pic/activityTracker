@@ -463,6 +463,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Незабаром: відстеження Windows';
 
   @override
+  String get settingsSendFeedback => 'Надіслати відгук';
+
+  @override
   String get settingsWindowsTrackingInterval => 'Інтервал відстеження Windows';
 
   @override

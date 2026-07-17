@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "Немає виключених застосунків. Утримуйте застосунок на панелі, щоб виключити його з відстеження.",
   "settingsStopExcluding": "Не виключати",
   "settingsWindowsTrackingComingSoon": "Незабаром: відстеження Windows",
+  "settingsSendFeedback": "Надіслати відгук",
   "settingsWindowsTrackingInterval": "Інтервал відстеження Windows",
   "settingsWindowsIdleTimeout": "Тайм-аут бездіяльності Windows",
   "settingsClearDataDialogTitle": "Очистити локальні дані?",

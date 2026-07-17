@@ -1,4 +1,4 @@
-package com.example.focustrace
+package com.stepandemianenko.focustrace
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

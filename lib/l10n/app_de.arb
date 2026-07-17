@@ -214,6 +214,7 @@
   "settingsExcludedAppsEmpty": "Keine ausgeschlossenen Apps. Halte eine App im Dashboard gedrückt, um sie von der Erfassung auszuschließen.",
   "settingsStopExcluding": "Ausschluss aufheben",
   "settingsWindowsTrackingComingSoon": "Demnächst: Erfassung unter Windows",
+  "settingsSendFeedback": "Feedback senden",
   "settingsWindowsTrackingInterval": "Erfassungsintervall unter Windows",
   "settingsWindowsIdleTimeout": "Zeitlimit für Inaktivität unter Windows",
   "settingsClearDataDialogTitle": "Lokale Daten löschen?",
