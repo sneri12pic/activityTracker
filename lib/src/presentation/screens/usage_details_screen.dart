@@ -8,6 +8,8 @@ import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
 import '../providers.dart';
 import '../view_models/app_usage_details_view_model.dart';
+import '../widgets/app_icon_avatar.dart';
+import '../widgets/trend_color.dart';
 
 class UsageDetailsScreen extends ConsumerWidget {
   const UsageDetailsScreen({required this.request, super.key});
@@ -104,33 +106,17 @@ class _AppSummaryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final summary = request.summary;
-    final iconBytes = summary.iconBytes;
     return Card(
       elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            if (iconBytes == null)
-              CircleAvatar(
-                radius: 24,
-                child: Text(
-                  summary.appName.isEmpty
-                      ? '?'
-                      : summary.appName[0].toUpperCase(),
-                ),
-              )
-            else
-              ClipOval(
-                child: Image.memory(
-                  iconBytes,
-                  width: 48,
-                  height: 48,
-                  cacheWidth: 144,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                ),
-              ),
+            AppIconAvatar(
+              appName: summary.appName,
+              iconBytes: summary.iconBytes,
+              size: 48,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -224,13 +210,11 @@ class _ComparisonBadge extends StatelessWidget {
     final isUnavailable = value == null;
     final isFlat = value != null && value.abs() < 0.5;
     final isIncrease = value != null && value > 0;
-    final color = isUnavailable || isFlat
-        ? theme.colorScheme.onSurfaceVariant
-        : isIncrease
-        ? theme.colorScheme.error
-        : theme.brightness == Brightness.dark
-        ? const Color(0xFF80D89D)
-        : const Color(0xFF19703A);
+    final color = trendColor(
+      theme,
+      isFlat: isUnavailable || isFlat,
+      isIncrease: isIncrease,
+    );
     final text = isUnavailable
         ? context.l10n.usageDetailsNoYesterdayComparison
         : isFlat

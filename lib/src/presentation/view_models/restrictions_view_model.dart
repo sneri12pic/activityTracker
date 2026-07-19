@@ -87,49 +87,22 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
     }
   }
 
-  Future<void> saveRule(RestrictionRule rule) async {
-    state = state.copyWith(isSaving: true, clearError: true);
-    try {
-      await _settingsRepository.saveRestrictionRule(rule);
-      final rules = await _settingsRepository.restrictionRules();
-      final hasOverlayPermission = await _platformDataSource
-          .hasOverlayPermission();
-      state = state.copyWith(
-        rules: rules,
-        hasOverlayPermission: hasOverlayPermission,
-        isSaving: false,
-      );
-      await _sync(rules, state.routines);
-    } catch (error) {
-      state = state.copyWith(isSaving: false, errorMessage: error.toString());
-    }
+  Future<void> saveRule(RestrictionRule rule) {
+    return _mutateRules(() => _settingsRepository.saveRestrictionRule(rule));
   }
 
-  Future<void> deleteRule(String appKey, RestrictionRuleType type) async {
-    state = state.copyWith(isSaving: true, clearError: true);
-    try {
-      await _settingsRepository.removeRestrictionRule(appKey, type);
-      final rules = await _settingsRepository.restrictionRules();
-      final hasOverlayPermission = await _platformDataSource
-          .hasOverlayPermission();
-      state = state.copyWith(
-        rules: rules,
-        hasOverlayPermission: hasOverlayPermission,
-        isSaving: false,
-      );
-      await _sync(rules, state.routines);
-    } catch (error) {
-      state = state.copyWith(isSaving: false, errorMessage: error.toString());
-    }
+  Future<void> deleteRule(String appKey, RestrictionRuleType type) {
+    return _mutateRules(
+      () => _settingsRepository.removeRestrictionRule(appKey, type),
+    );
   }
 
   Future<void> unblockAppNow({
     required String appKey,
     required int usageSecondsToday,
     DateTime? now,
-  }) async {
-    state = state.copyWith(isSaving: true, clearError: true);
-    try {
+  }) {
+    return _mutateRules(() async {
       final currentRules = await _settingsRepository.restrictionRules();
       final checkedAt = now ?? DateTime.now();
       final blockingRules = currentRules.where(
@@ -140,6 +113,15 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
       for (final rule in blockingRules) {
         await _settingsRepository.removeRestrictionRule(rule.appKey, rule.type);
       }
+    });
+  }
+
+  /// Runs [mutation], then reloads rules, rechecks the overlay permission,
+  /// and pushes the new configuration to the platform side.
+  Future<void> _mutateRules(Future<void> Function() mutation) async {
+    state = state.copyWith(isSaving: true, clearError: true);
+    try {
+      await mutation();
       final rules = await _settingsRepository.restrictionRules();
       final hasOverlayPermission = await _platformDataSource
           .hasOverlayPermission();

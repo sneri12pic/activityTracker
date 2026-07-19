@@ -9,6 +9,8 @@ import '../providers.dart';
 import '../screens/restriction_editor_sheet.dart';
 import '../screens/usage_details_screen.dart';
 import '../view_models/app_usage_details_view_model.dart';
+import 'app_icon_avatar.dart';
+import 'trend_color.dart';
 
 const _sheetColor = Color(0xFF0D111A);
 
@@ -52,38 +54,17 @@ class SummaryTile extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  if (summary.iconBytes != null)
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        ClipOval(
-                          child: Image.memory(
-                            summary.iconBytes!,
-                            width: 36,
-                            height: 36,
-                            cacheWidth: 108,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          ),
-                        ),
-                        if (isBlocked) const _LockBadge(),
-                      ],
-                    )
-                  else
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          child: Text(
-                            summary.appName.isEmpty
-                                ? '?'
-                                : summary.appName[0].toUpperCase(),
-                          ),
-                        ),
-                        if (isBlocked) const _LockBadge(),
-                      ],
-                    ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      AppIconAvatar(
+                        appName: summary.appName,
+                        iconBytes: summary.iconBytes,
+                        size: 36,
+                      ),
+                      if (isBlocked) const _LockBadge(),
+                    ],
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -231,18 +212,12 @@ class SummaryTile extends ConsumerWidget {
               usageSecondsToday: summary.totalDurationSeconds,
             );
       case _SummaryAction.restrict:
-        final rule = await showRestrictionEditor(
+        await createRestrictionForApp(
           context,
+          ref,
           appKey: summary.appKey,
           appName: summary.appName,
         );
-        if (rule == null || !context.mounted) {
-          return;
-        }
-        await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
-        if (context.mounted) {
-          await promptRestrictionPermissionsIfNeeded(context, ref);
-        }
       case _SummaryAction.removeFromToday:
         await dashboardViewModel.hideAppForToday(summary);
       case _SummaryAction.exclude:
@@ -320,13 +295,7 @@ class _UsageTrendBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final isFlat = value.abs() < 0.5;
     final isIncrease = value > 0;
-    final color = isFlat
-        ? theme.colorScheme.onSurfaceVariant
-        : isIncrease
-        ? theme.colorScheme.error
-        : theme.brightness == Brightness.dark
-        ? const Color(0xFF80D89D)
-        : const Color(0xFF19703A);
+    final color = trendColor(theme, isFlat: isFlat, isIncrease: isIncrease);
     final rounded = value.abs().round();
     final semanticLabel = isFlat
         ? context.l10n.usageTrendUnchanged(period)

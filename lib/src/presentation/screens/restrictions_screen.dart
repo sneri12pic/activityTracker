@@ -9,6 +9,7 @@ import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
 import '../providers.dart';
+import '../widgets/app_icon_avatar.dart';
 import 'restriction_editor_sheet.dart';
 import 'routine_editor_sheet.dart';
 
@@ -53,7 +54,12 @@ class RestrictionsScreen extends ConsumerWidget {
             if (topApps.isNotEmpty) ...[
               _TopUsedCard(
                 apps: topApps,
-                onAppTap: (app) => _createRuleForApp(context, ref, app),
+                onAppTap: (app) => createRestrictionForApp(
+                  context,
+                  ref,
+                  appKey: app.appKey,
+                  appName: app.appName,
+                ),
               ),
               const SizedBox(height: 12),
             ],
@@ -218,25 +224,6 @@ class RestrictionsScreen extends ConsumerWidget {
     await ref.read(restrictionsViewModelProvider.notifier).saveRoutine(routine);
   }
 
-  Future<void> _createRuleForApp(
-    BuildContext context,
-    WidgetRef ref,
-    AppUsageSummary app,
-  ) async {
-    final rule = await showRestrictionEditor(
-      context,
-      appKey: app.appKey,
-      appName: app.appName,
-    );
-    if (rule == null || !context.mounted) {
-      return;
-    }
-    await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
-    if (context.mounted) {
-      await promptRestrictionPermissionsIfNeeded(context, ref);
-    }
-  }
-
   Future<void> _chooseAppAndCreateRule(
     BuildContext context,
     WidgetRef ref, {
@@ -253,19 +240,12 @@ class RestrictionsScreen extends ConsumerWidget {
     if (selected == null || !context.mounted) {
       return;
     }
-
-    final rule = await showRestrictionEditor(
+    await createRestrictionForApp(
       context,
+      ref,
       appKey: selected.appKey,
       appName: selected.appName,
     );
-    if (rule == null || !context.mounted) {
-      return;
-    }
-    await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
-    if (context.mounted) {
-      await promptRestrictionPermissionsIfNeeded(context, ref);
-    }
   }
 
   List<_AppCandidate> _appCandidates(
@@ -344,7 +324,11 @@ class _TopUsedCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    _SummaryIcon(summary: apps[index]),
+                    AppIconAvatar(
+                      appName: apps[index].appName,
+                      iconBytes: apps[index].iconBytes,
+                      size: 32,
+                    ),
                   ],
                 ),
                 title: Text(
@@ -364,35 +348,6 @@ class _TopUsedCard extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SummaryIcon extends StatelessWidget {
-  const _SummaryIcon({required this.summary});
-
-  final AppUsageSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
-    final iconBytes = summary.iconBytes;
-    if (iconBytes != null) {
-      return ClipOval(
-        child: Image.memory(
-          iconBytes,
-          width: 32,
-          height: 32,
-          cacheWidth: 96,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-        ),
-      );
-    }
-    return CircleAvatar(
-      radius: 16,
-      child: Text(
-        summary.appName.isEmpty ? '?' : summary.appName[0].toUpperCase(),
       ),
     );
   }
@@ -551,7 +506,10 @@ class _AppSearchSheetState extends State<_AppSearchSheet> {
                         itemBuilder: (context, index) {
                           final candidate = filtered[index];
                           return ListTile(
-                            leading: _AppIcon(candidate: candidate),
+                            leading: AppIconAvatar(
+                              appName: candidate.appName,
+                              iconBytes: candidate.iconBytes,
+                            ),
                             title: Text(
                               candidate.appName,
                               maxLines: 1,
@@ -589,36 +547,6 @@ class _AppSearchSheetState extends State<_AppSearchSheet> {
               (candidate.subtitle?.toLowerCase().contains(query) ?? false),
         )
         .toList();
-  }
-}
-
-class _AppIcon extends StatelessWidget {
-  const _AppIcon({required this.candidate});
-
-  final _AppCandidate candidate;
-
-  @override
-  Widget build(BuildContext context) {
-    final iconBytes = candidate.iconBytes;
-    if (iconBytes != null) {
-      return ClipOval(
-        // Stable byte object + cacheWidth: decoded once, then served from the
-        // image cache instead of re-decoding the PNG on every rebuild.
-        child: Image.memory(
-          iconBytes,
-          width: 40,
-          height: 40,
-          cacheWidth: 120,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-        ),
-      );
-    }
-    return CircleAvatar(
-      child: Text(
-        candidate.appName.isEmpty ? '?' : candidate.appName[0].toUpperCase(),
-      ),
-    );
   }
 }
 

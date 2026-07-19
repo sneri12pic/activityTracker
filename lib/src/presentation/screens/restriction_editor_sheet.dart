@@ -26,6 +26,27 @@ Future<RestrictionRule?> showRestrictionEditor(
   );
 }
 
+/// Full "restrict an app" flow: editor sheet, save, then permission prompts.
+Future<void> createRestrictionForApp(
+  BuildContext context,
+  WidgetRef ref, {
+  required String appKey,
+  required String appName,
+}) async {
+  final rule = await showRestrictionEditor(
+    context,
+    appKey: appKey,
+    appName: appName,
+  );
+  if (rule == null || !context.mounted) {
+    return;
+  }
+  await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
+  if (context.mounted) {
+    await promptRestrictionPermissionsIfNeeded(context, ref);
+  }
+}
+
 Future<void> promptRestrictionPermissionsIfNeeded(
   BuildContext context,
   WidgetRef ref,

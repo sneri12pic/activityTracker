@@ -130,19 +130,13 @@ class UsageBubbleScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     UsageItem item,
-  ) async {
-    final rule = await showRestrictionEditor(
+  ) {
+    return createRestrictionForApp(
       context,
+      ref,
       appKey: item.id,
       appName: item.name,
     );
-    if (rule == null || !context.mounted) {
-      return;
-    }
-    await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
-    if (context.mounted) {
-      await promptRestrictionPermissionsIfNeeded(context, ref);
-    }
   }
 
   Future<void> _showBubbleActions(
