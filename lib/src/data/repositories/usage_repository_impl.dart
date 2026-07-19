@@ -68,10 +68,15 @@ class UsageRepositoryImpl implements UsageRepository {
       return _aggregationService.withPercentages(
         stored.map((summary) {
           final current = metadataByKey[summary.appKey];
-          if (current?.iconBytes == null) {
+          if (current == null) {
             return summary;
           }
-          return summary.copyWith(iconBytes: current!.iconBytes);
+          return summary.copyWith(
+            appName: current.appName.isEmpty
+                ? summary.appName
+                : current.appName,
+            iconBytes: current.iconBytes,
+          );
         }),
       );
     } catch (_) {

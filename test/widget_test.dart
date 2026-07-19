@@ -34,6 +34,7 @@ void main() {
 
     expect(find.text('Usage Bubbles'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
+    expect(find.text('editor.exe'), findsNothing);
     expect(find.text('1h 15m'), findsWidgets);
     expect(find.byIcon(Icons.settings), findsOneWidget);
 

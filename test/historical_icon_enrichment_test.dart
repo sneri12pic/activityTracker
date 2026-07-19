@@ -5,13 +5,13 @@ import 'package:focustrace/focus_trace.dart';
 
 void main() {
   test(
-    'historical Android summaries receive current installed-app icons',
+    'historical Android summaries receive current labels and icons',
     () async {
       final icon = Uint8List.fromList(const [1, 2, 3]);
       final localDataSource = _HistoricalLocalDataSource()
         ..summaries = const [
           AppUsageSummary(
-            appName: 'Example',
+            appName: 'example.app',
             packageName: 'example.app',
             totalDurationSeconds: 600,
             percentageOfTotal: 0,
@@ -20,7 +20,7 @@ void main() {
       final platformDataSource = _HistoricalPlatformDataSource()
         ..metadata = [
           AppUsageSummary(
-            appName: 'Example',
+            appName: 'Friendly Example',
             packageName: 'example.app',
             totalDurationSeconds: 0,
             percentageOfTotal: 0,
@@ -36,6 +36,7 @@ void main() {
       final result = await repository.getDailySummaries(DateTime(2026, 7, 18));
 
       expect(platformDataSource.requestedKeys, {'example.app'});
+      expect(result.single.appName, 'Friendly Example');
       expect(result.single.iconBytes, same(icon));
       expect(result.single.percentageOfTotal, 1);
     },
