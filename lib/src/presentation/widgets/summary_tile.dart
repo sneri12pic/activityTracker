@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/app_usage_summary.dart';
 import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/restriction_rule.dart';
-import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
 import '../providers.dart';
 import '../screens/restriction_editor_sheet.dart';
+import '../screens/usage_details_screen.dart';
+import '../view_models/app_usage_details_view_model.dart';
 
 const _sheetColor = Color(0xFF0D111A);
 
@@ -42,7 +43,7 @@ class SummaryTile extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _showSessionDetails(context, ref),
+        onTap: () => _openUsageDetails(context, ref),
         onLongPress: isToday ? () => _showActions(context, ref) : null,
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -141,22 +142,17 @@ class SummaryTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _showSessionDetails(BuildContext context, WidgetRef ref) async {
-    final platform = ref.read(dashboardViewModelProvider).platform;
-    final sessions = await ref
-        .read(dashboardViewModelProvider.notifier)
-        .topSessionsForApp(summary);
-    if (!context.mounted) {
-      return;
-    }
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: _sheetColor,
-      builder: (context) => _SessionDetailsSheet(
-        summary: summary,
-        sessions: sessions,
-        platform: platform,
+  Future<void> _openUsageDetails(BuildContext context, WidgetRef ref) {
+    final dashboardState = ref.read(dashboardViewModelProvider);
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (context) => UsageDetailsScreen(
+          request: AppUsageDetailsRequest(
+            summary: summary,
+            selectedDate: dashboardState.selectedDate,
+            platform: dashboardState.platform,
+          ),
+        ),
       ),
     );
   }
@@ -395,96 +391,10 @@ class _LockBadge extends StatelessWidget {
   }
 }
 
-class _SessionDetailsSheet extends StatelessWidget {
-  const _SessionDetailsSheet({
-    required this.summary,
-    required this.sessions,
-    required this.platform,
-  });
-
-  final AppUsageSummary summary;
-  final List<UsageSession> sessions;
-  final UsagePlatform platform;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _SheetHeader(
-            title: summary.appName,
-            subtitle: context.l10n.sessionTotal(
-              context.l10n.compactDuration(summary.totalDuration),
-            ),
-          ),
-          if (platform != UsagePlatform.windows)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-              child: Text(
-                context.l10n.sessionDetailsUnavailable,
-                style: theme.textTheme.bodyMedium,
-              ),
-            )
-          else if (sessions.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-              child: Text(
-                context.l10n.sessionNoneRecorded,
-                style: theme.textTheme.bodyMedium,
-              ),
-            )
-          else ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Text(
-                context.l10n.sessionLongestTitle,
-                style: theme.textTheme.labelLarge,
-              ),
-            ),
-            for (final session in sessions)
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.schedule, size: 20),
-                title: Text(_sessionLabel(context, session)),
-              ),
-            const SizedBox(height: 12),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _sessionLabel(BuildContext context, UsageSession session) {
-    final start = _clock(context, session.startedAt);
-    final duration = context.l10n.compactDuration(session.duration);
-    final endedAt = session.endedAt;
-    if (endedAt == null) {
-      return context.l10n.sessionOngoingLabel(start, duration);
-    }
-    return context.l10n.sessionRangeLabel(
-      start,
-      _clock(context, endedAt),
-      duration,
-    );
-  }
-
-  String _clock(BuildContext context, DateTime time) {
-    return MaterialLocalizations.of(context).formatTimeOfDay(
-      TimeOfDay.fromDateTime(time),
-      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-    );
-  }
-}
-
 class _SheetHeader extends StatelessWidget {
-  const _SheetHeader({required this.title, this.subtitle});
+  const _SheetHeader({required this.title});
 
   final String title;
-  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -502,10 +412,6 @@ class _SheetHeader extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(subtitle!, style: theme.textTheme.bodySmall),
-          ],
         ],
       ),
     );

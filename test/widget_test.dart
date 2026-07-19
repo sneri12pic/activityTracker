@@ -51,6 +51,16 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Productivity'), findsNothing);
+
+    await tester.ensureVisible(find.text('Editor'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Editor'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Last 7 days'), findsOneWidget);
+    expect(find.text('50% more than yesterday'), findsOneWidget);
   });
 
   testWidgets('language picker applies and persists locale immediately', (

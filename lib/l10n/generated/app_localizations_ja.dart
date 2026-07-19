@@ -429,6 +429,30 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get usageDetailsLastSevenDays => '過去7日間';
+
+  @override
+  String usageDetailsMoreThanYesterday(int percentage) {
+    return '昨日より$percentage%多い';
+  }
+
+  @override
+  String usageDetailsLessThanYesterday(int percentage) {
+    return '昨日より$percentage%少ない';
+  }
+
+  @override
+  String get usageDetailsSameAsYesterday => '昨日と同じ';
+
+  @override
+  String get usageDetailsNoYesterdayComparison => '昨日との比較はまだありません';
+
+  @override
+  String usageDetailsDayValue(String date, String duration) {
+    return '$date: $duration';
+  }
+
+  @override
   String get settingsTitle => '設定';
 
   @override
