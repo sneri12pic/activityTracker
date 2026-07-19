@@ -232,6 +232,15 @@
       "period": {"type": "String"}
     }
   },
+  "usageDetailsLastSevenDays": "Letzte 7 Tage",
+  "usageDetailsMoreThanYesterday": "{percentage} % mehr als gestern",
+  "@usageDetailsMoreThanYesterday": {"placeholders": {"percentage": {"type": "int"}}},
+  "usageDetailsLessThanYesterday": "{percentage} % weniger als gestern",
+  "@usageDetailsLessThanYesterday": {"placeholders": {"percentage": {"type": "int"}}},
+  "usageDetailsSameAsYesterday": "Wie gestern",
+  "usageDetailsNoYesterdayComparison": "Noch kein Vergleich mit gestern",
+  "usageDetailsDayValue": "{date}: {duration}",
+  "@usageDetailsDayValue": {"placeholders": {"date": {"type": "String"}, "duration": {"type": "String"}}},
   "settingsTitle": "Einstellungen",
   "settingsPrivacyTitle": "Datenschutz",
   "settingsPrivacyBody": "FocusTrace speichert Nutzungsdaten lokal auf diesem Gerät. Erfasste App- oder Fensternutzung wird nicht hochgeladen.",

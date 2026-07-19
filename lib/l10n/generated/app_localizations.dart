@@ -843,6 +843,42 @@ abstract class AppLocalizations {
   /// **'{period}: usage unchanged'**
   String usageTrendUnchanged(String period);
 
+  /// No description provided for @usageDetailsLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get usageDetailsLastSevenDays;
+
+  /// No description provided for @usageDetailsMoreThanYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'{percentage}% more than yesterday'**
+  String usageDetailsMoreThanYesterday(int percentage);
+
+  /// No description provided for @usageDetailsLessThanYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'{percentage}% less than yesterday'**
+  String usageDetailsLessThanYesterday(int percentage);
+
+  /// No description provided for @usageDetailsSameAsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as yesterday'**
+  String get usageDetailsSameAsYesterday;
+
+  /// No description provided for @usageDetailsNoYesterdayComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'No yesterday comparison yet'**
+  String get usageDetailsNoYesterdayComparison;
+
+  /// No description provided for @usageDetailsDayValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {duration}'**
+  String usageDetailsDayValue(String date, String duration);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

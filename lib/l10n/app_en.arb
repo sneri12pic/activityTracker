@@ -232,6 +232,28 @@
       "period": {"type": "String"}
     }
   },
+  "usageDetailsLastSevenDays": "Last 7 days",
+  "usageDetailsMoreThanYesterday": "{percentage}% more than yesterday",
+  "@usageDetailsMoreThanYesterday": {
+    "placeholders": {
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageDetailsLessThanYesterday": "{percentage}% less than yesterday",
+  "@usageDetailsLessThanYesterday": {
+    "placeholders": {
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageDetailsSameAsYesterday": "Same as yesterday",
+  "usageDetailsNoYesterdayComparison": "No yesterday comparison yet",
+  "usageDetailsDayValue": "{date}: {duration}",
+  "@usageDetailsDayValue": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "duration": {"type": "String"}
+    }
+  },
   "settingsTitle": "Settings",
   "settingsPrivacyTitle": "Privacy",
   "settingsPrivacyBody": "FocusTrace stores usage data locally on this device. It does not upload tracked app or window usage.",

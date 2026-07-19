@@ -15,6 +15,7 @@ import '../domain/repositories/app_language_repository.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/usage_repository.dart';
 import 'view_models/app_language_view_model.dart';
+import 'view_models/app_usage_details_view_model.dart';
 import 'view_models/dashboard_view_model.dart';
 import 'view_models/onboarding_view_model.dart';
 import 'view_models/restrictions_view_model.dart';
@@ -131,6 +132,20 @@ final dashboardViewModelProvider =
         trendService: ref.watch(usageTrendServiceProvider),
       );
       viewModel.loadTodayUsage();
+      return viewModel;
+    });
+
+final appUsageDetailsViewModelProvider = StateNotifierProvider.autoDispose
+    .family<
+      AppUsageDetailsViewModel,
+      AppUsageDetailsState,
+      AppUsageDetailsRequest
+    >((ref, request) {
+      final viewModel = AppUsageDetailsViewModel(
+        usageRepository: ref.watch(usageRepositoryProvider),
+        request: request,
+      );
+      viewModel.load();
       return viewModel;
     });
 

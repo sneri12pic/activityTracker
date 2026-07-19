@@ -456,6 +456,30 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get usageDetailsLastSevenDays => 'Останні 7 днів';
+
+  @override
+  String usageDetailsMoreThanYesterday(int percentage) {
+    return 'На $percentage% більше, ніж учора';
+  }
+
+  @override
+  String usageDetailsLessThanYesterday(int percentage) {
+    return 'На $percentage% менше, ніж учора';
+  }
+
+  @override
+  String get usageDetailsSameAsYesterday => 'Так само, як учора';
+
+  @override
+  String get usageDetailsNoYesterdayComparison => 'Порівняння з учора ще немає';
+
+  @override
+  String usageDetailsDayValue(String date, String duration) {
+    return '$date: $duration';
+  }
+
+  @override
   String get settingsTitle => 'Налаштування';
 
   @override
