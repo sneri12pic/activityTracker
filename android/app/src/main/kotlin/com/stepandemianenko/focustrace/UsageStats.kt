@@ -104,7 +104,9 @@ object UsageStats {
                     // Some Android versions emit both the legacy MOVE event and
                     // ACTIVITY_RESUMED. Keep the first timestamp and count the
                     // pair as one launch.
-                    foregroundSince.putIfAbsent(packageName, event.timeStampMs)
+                    if (!foregroundSince.containsKey(packageName)) {
+                        foregroundSince[packageName] = event.timeStampMs
+                    }
                     if (isLaunch) {
                         launches[packageName] = (launches[packageName] ?: 0) + 1
                     }
