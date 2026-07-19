@@ -71,6 +71,7 @@ class DashboardScreen extends ConsumerWidget {
                           dashboardState.summaries.isNotEmpty) ...[
                         UsageBubbleScreen(
                           summaries: dashboardState.summaries,
+                          trendsByAppKey: dashboardState.trendsByAppKey,
                           isToday: dashboardState.isToday,
                         ),
                         const SizedBox(height: 12),

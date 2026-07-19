@@ -94,5 +94,13 @@ void main() {
     expect(allTime.map((summary) => summary.appName), ['Editor', 'Browser']);
     expect(allTime.first.totalDurationSeconds, 1500);
     expect(allTime.first.launchCount, 5);
+
+    final history = await dataSource.getUsageHistory(
+      DateTime(2026, 7, 12),
+      DateTime(2026, 7, 13),
+    );
+    expect(history, hasLength(1));
+    expect(history.single.day, DateTime(2026, 7, 12));
+    expect(history.single.summary.totalDurationSeconds, 900);
   });
 }

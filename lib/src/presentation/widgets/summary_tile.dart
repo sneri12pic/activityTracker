@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
@@ -11,10 +12,16 @@ import '../screens/restriction_editor_sheet.dart';
 const _sheetColor = Color(0xFF0D111A);
 
 class SummaryTile extends ConsumerWidget {
-  const SummaryTile(this.summary, {required this.isToday, super.key});
+  const SummaryTile(
+    this.summary, {
+    required this.isToday,
+    this.trend,
+    super.key,
+  });
 
   final AppUsageSummary summary;
   final bool isToday;
+  final UsageTrend? trend;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -117,6 +124,10 @@ class SummaryTile extends ConsumerWidget {
                   ),
                 ],
               ),
+              if (trend?.hasData ?? false) ...[
+                const SizedBox(height: 10),
+                _UsageTrendBadges(trend: trend!),
+              ],
               const SizedBox(height: 12),
               LinearProgressIndicator(
                 value: summary.percentageOfTotal.clamp(0, 1),
@@ -257,6 +268,105 @@ class SummaryTile extends ConsumerWidget {
           },
         ) ??
         false;
+  }
+}
+
+class _UsageTrendBadges extends StatelessWidget {
+  const _UsageTrendBadges({required this.trend});
+
+  final UsageTrend trend;
+
+  @override
+  Widget build(BuildContext context) {
+    final values = <({String period, double? value})>[
+      (period: context.l10n.usageTrendDayShort, value: trend.dayChangePercent),
+      (
+        period: context.l10n.usageTrendWeekShort,
+        value: trend.weekChangePercent,
+      ),
+      (
+        period: context.l10n.usageTrendMonthShort,
+        value: trend.monthChangePercent,
+      ),
+    ];
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final entry in values)
+          if (entry.value != null)
+            _UsageTrendBadge(period: entry.period, value: entry.value!),
+      ],
+    );
+  }
+}
+
+class _UsageTrendBadge extends StatelessWidget {
+  const _UsageTrendBadge({required this.period, required this.value});
+
+  final String period;
+  final double value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isFlat = value.abs() < 0.5;
+    final isIncrease = value > 0;
+    final color = isFlat
+        ? theme.colorScheme.onSurfaceVariant
+        : isIncrease
+        ? theme.colorScheme.error
+        : theme.brightness == Brightness.dark
+        ? const Color(0xFF80D89D)
+        : const Color(0xFF19703A);
+    final rounded = value.abs().round();
+    final semanticLabel = isFlat
+        ? context.l10n.usageTrendUnchanged(period)
+        : isIncrease
+        ? context.l10n.usageTrendIncrease(period, rounded)
+        : context.l10n.usageTrendDecrease(period, rounded);
+
+    return Semantics(
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isFlat
+                    ? Icons.remove
+                    : isIncrease
+                    ? Icons.trending_up
+                    : Icons.trending_down,
+                size: 14,
+                color: color,
+              ),
+              const SizedBox(width: 3),
+              Text(
+                '$period ${isIncrease && !isFlat
+                    ? '+'
+                    : isFlat
+                    ? ''
+                    : '-'}'
+                '$rounded%',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

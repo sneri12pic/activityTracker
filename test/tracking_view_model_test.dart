@@ -83,6 +83,12 @@ class _FakeUsageRepository implements UsageRepository {
       const <AppUsageSummary>[];
 
   @override
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  ) async => const [];
+
+  @override
   Future<void> insertSession(UsageSession session) async {
     final error = insertError;
     if (error != null) {

@@ -1,4 +1,5 @@
 export 'src/application/services/usage_aggregation_service.dart';
+export 'src/application/services/usage_trend_service.dart';
 export 'src/application/utils/duration_format.dart';
 export 'src/data/datasources/focus_trace_local_data_source.dart';
 export 'src/data/datasources/platform_locale_data_source.dart';
@@ -7,6 +8,7 @@ export 'src/data/repositories/app_language_repository_impl.dart';
 export 'src/data/repositories/settings_repository_impl.dart';
 export 'src/data/repositories/usage_repository_impl.dart';
 export 'src/domain/models/app_usage_summary.dart';
+export 'src/domain/models/daily_app_usage.dart';
 export 'src/domain/models/app_language.dart';
 export 'src/domain/models/restriction_rule.dart';
 export 'src/domain/models/tracking_status.dart';

@@ -1,4 +1,5 @@
 import '../models/app_usage_summary.dart';
+import '../models/daily_app_usage.dart';
 import '../models/usage_session.dart';
 
 abstract class UsageRepository {
@@ -14,6 +15,11 @@ abstract class UsageRepository {
 
   /// Per-app totals aggregated across every locally stored day.
   Future<List<AppUsageSummary>> getAllTimeSummaries();
+
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  );
 
   /// The longest recorded sessions for [appKey] on [date], longest first.
   /// Returns an empty list on platforms without local session storage.

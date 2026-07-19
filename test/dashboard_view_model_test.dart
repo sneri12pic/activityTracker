@@ -7,6 +7,8 @@ void main() {
   test(
     'past Android history remains available without current usage access',
     () async {
+      final now = DateTime.now();
+      final yesterday = DateTime(now.year, now.month, now.day - 1);
       final repository = _DashboardUsageRepository(hasUsageAccess: false)
         ..dailyResult = const [
           AppUsageSummary(
@@ -23,6 +25,26 @@ void main() {
             totalDurationSeconds: 3600,
             percentageOfTotal: 1,
           ),
+        ]
+        ..historyResult = [
+          DailyAppUsage(
+            day: yesterday,
+            summary: const AppUsageSummary(
+              appName: 'Yesterday app',
+              packageName: 'example.yesterday',
+              totalDurationSeconds: 600,
+              percentageOfTotal: 0,
+            ),
+          ),
+          DailyAppUsage(
+            day: yesterday.subtract(const Duration(days: 1)),
+            summary: const AppUsageSummary(
+              appName: 'Yesterday app',
+              packageName: 'example.yesterday',
+              totalDurationSeconds: 400,
+              percentageOfTotal: 0,
+            ),
+          ),
         ];
       final viewModel = DashboardViewModel(
         usageRepository: repository,
@@ -36,6 +58,10 @@ void main() {
       expect(viewModel.state.hasUsageAccess, isFalse);
       expect(viewModel.state.summaries.single.appName, 'Yesterday app');
       expect(viewModel.state.allTimeMostUsed?.appName, 'All-time leader');
+      expect(
+        viewModel.state.trendsByAppKey['example.yesterday']?.dayChangePercent,
+        50,
+      );
     },
   );
 
@@ -84,6 +110,7 @@ class _DashboardUsageRepository implements UsageRepository {
   final bool _hasUsageAccess;
   List<AppUsageSummary> dailyResult = const [];
   List<AppUsageSummary> allTimeResult = const [];
+  List<DailyAppUsage> historyResult = const [];
   List<Future<List<AppUsageSummary>>> dailyResults = const [];
   int _dailyCallCount = 0;
 
@@ -103,6 +130,12 @@ class _DashboardUsageRepository implements UsageRepository {
 
   @override
   Future<List<AppUsageSummary>> getAllTimeSummaries() async => allTimeResult;
+
+  @override
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  ) async => historyResult;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

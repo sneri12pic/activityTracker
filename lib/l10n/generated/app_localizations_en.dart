@@ -421,6 +421,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get usageTrendDayShort => 'D';
+
+  @override
+  String get usageTrendWeekShort => 'W';
+
+  @override
+  String get usageTrendMonthShort => 'M';
+
+  @override
+  String usageTrendIncrease(String period, int percentage) {
+    return '$period: usage increased by $percentage%';
+  }
+
+  @override
+  String usageTrendDecrease(String period, int percentage) {
+    return '$period: usage decreased by $percentage%';
+  }
+
+  @override
+  String usageTrendUnchanged(String period) {
+    return '$period: usage unchanged';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

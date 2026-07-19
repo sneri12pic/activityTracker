@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_item.dart';
 import '../localization/app_localizations_x.dart';
@@ -14,11 +15,13 @@ import 'restriction_editor_sheet.dart';
 class UsageBubbleScreen extends ConsumerWidget {
   const UsageBubbleScreen({
     required this.summaries,
+    required this.trendsByAppKey,
     required this.isToday,
     super.key,
   });
 
   final List<AppUsageSummary> summaries;
+  final Map<String, UsageTrend> trendsByAppKey;
   final bool isToday;
 
   @override
@@ -101,7 +104,11 @@ class UsageBubbleScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 10),
                   for (final summary in summaries)
-                    SummaryTile(summary, isToday: isToday),
+                    SummaryTile(
+                      summary,
+                      isToday: isToday,
+                      trend: trendsByAppKey[summary.appKey],
+                    ),
                 ],
               ),
             ],

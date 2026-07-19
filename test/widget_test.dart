@@ -38,6 +38,7 @@ void main() {
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('editor.exe'), findsNothing);
     expect(find.text('Launches: 3'), findsOneWidget);
+    expect(find.text('D +50%'), findsOneWidget);
     expect(find.text('1h 15m'), findsWidgets);
     expect(find.byIcon(Icons.settings), findsOneWidget);
 
@@ -138,6 +139,35 @@ class _FakeUsageRepository implements UsageRepository {
       launchCount: 5,
     ),
   ];
+
+  @override
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return [
+      DailyAppUsage(
+        day: today,
+        summary: const AppUsageSummary(
+          appName: 'Editor',
+          processName: 'editor.exe',
+          totalDurationSeconds: 4500,
+          percentageOfTotal: 0,
+        ),
+      ),
+      DailyAppUsage(
+        day: today.subtract(const Duration(days: 1)),
+        summary: const AppUsageSummary(
+          appName: 'Editor',
+          processName: 'editor.exe',
+          totalDurationSeconds: 3000,
+          percentageOfTotal: 0,
+        ),
+      ),
+    ];
+  }
 
   @override
   Future<List<UsageSession>> topSessionsForApp(

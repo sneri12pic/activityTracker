@@ -1,5 +1,6 @@
 import '../../application/services/usage_aggregation_service.dart';
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/usage_session.dart';
 import '../../domain/repositories/usage_repository.dart';
 import '../datasources/focus_trace_local_data_source.dart';
@@ -56,6 +57,14 @@ class UsageRepositoryImpl implements UsageRepository {
   Future<List<AppUsageSummary>> getAllTimeSummaries() async {
     final stored = await _localDataSource.getAllTimeSummaries();
     return _withCurrentMetadata(stored);
+  }
+
+  @override
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  ) {
+    return _localDataSource.getUsageHistory(fromInclusive, toExclusive);
   }
 
   Future<List<AppUsageSummary>> _withCurrentMetadata(

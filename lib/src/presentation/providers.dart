@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/services/usage_aggregation_service.dart';
+import '../application/services/usage_trend_service.dart';
 import '../data/datasources/focus_trace_local_data_source.dart';
 import '../data/datasources/platform_locale_data_source.dart';
 import '../data/datasources/platform_usage_data_source.dart';
@@ -39,6 +40,10 @@ final usagePlatformProvider = Provider<UsagePlatform>((ref) {
 
 final usageAggregationServiceProvider = Provider<UsageAggregationService>(
   (ref) => const UsageAggregationService(),
+);
+
+final usageTrendServiceProvider = Provider<UsageTrendService>(
+  (ref) => const UsageTrendService(),
 );
 
 final localDataSourceProvider = Provider<FocusTraceLocalDataSource>(
@@ -123,6 +128,7 @@ final dashboardViewModelProvider =
         settingsRepository: ref.watch(settingsRepositoryProvider),
         platform: ref.watch(usagePlatformProvider),
         aggregationService: ref.watch(usageAggregationServiceProvider),
+        trendService: ref.watch(usageTrendServiceProvider),
       );
       viewModel.loadTodayUsage();
       return viewModel;
