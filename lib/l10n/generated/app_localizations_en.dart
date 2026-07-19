@@ -276,6 +276,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardNoUsageDay => 'No usage recorded for this day.';
 
   @override
+  String get dashboardAllTimeMostUsedTitle => 'Most used of all time';
+
+  @override
   String get dashboardUnsupportedPlatform =>
       'FocusTrace MVP supports Android and Windows. Other platforms can be added later through isolated platform data sources.';
 

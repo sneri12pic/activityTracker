@@ -141,6 +141,9 @@ class _InMemoryLocalDataSource implements FocusTraceLocalDataSource {
       const [];
 
   @override
+  Future<List<AppUsageSummary>> getAllTimeSummaries() async => const [];
+
+  @override
   Future<String?> readSetting(String key) async => _settings[key];
 
   @override

@@ -126,6 +126,7 @@
   "dashboardStartTracking": "Start Tracking",
   "dashboardNoUsageToday": "No usage recorded for today.",
   "dashboardNoUsageDay": "No usage recorded for this day.",
+  "dashboardAllTimeMostUsedTitle": "Most used of all time",
   "dashboardUnsupportedPlatform": "FocusTrace MVP supports Android and Windows. Other platforms can be added later through isolated platform data sources.",
   "commonRetry": "Retry",
   "commonUnexpectedError": "Something went wrong. Please try again.",

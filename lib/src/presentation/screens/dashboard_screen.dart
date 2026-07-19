@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../domain/models/app_usage_summary.dart';
 import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
 import '../providers.dart';
@@ -59,6 +60,12 @@ class DashboardScreen extends ConsumerWidget {
                     primary: true,
                     padding: const EdgeInsets.all(16),
                     children: [
+                      if (dashboardState.allTimeMostUsed != null) ...[
+                        _AllTimeMostUsedCard(
+                          summary: dashboardState.allTimeMostUsed!,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       if (dashboardState.errorMessage == null &&
                           !dashboardState.isLoading &&
                           dashboardState.summaries.isNotEmpty) ...[
@@ -119,6 +126,62 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AllTimeMostUsedCard extends StatelessWidget {
+  const _AllTimeMostUsedCard({required this.summary});
+
+  final AppUsageSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final iconBytes = summary.iconBytes;
+    return Card(
+      elevation: 0,
+      child: ListTile(
+        leading: iconBytes == null
+            ? CircleAvatar(
+                child: Text(
+                  summary.appName.isEmpty
+                      ? '?'
+                      : summary.appName[0].toUpperCase(),
+                ),
+              )
+            : ClipOval(
+                child: Image.memory(
+                  iconBytes,
+                  width: 40,
+                  height: 40,
+                  cacheWidth: 120,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                ),
+              ),
+        title: Text(
+          context.l10n.dashboardAllTimeMostUsedTitle,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(
+          summary.appName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        trailing: Text(
+          context.l10n.compactDuration(summary.totalDuration),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );

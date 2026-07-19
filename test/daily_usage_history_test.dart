@@ -61,4 +61,38 @@ void main() {
     // Other days stay untouched.
     expect(await dataSource.getDailySummaries(DateTime(2026, 7, 11)), isEmpty);
   });
+
+  test('all-time summaries aggregate every stored day', () async {
+    await dataSource.saveDailySummaries(DateTime(2026, 7, 11), const [
+      AppUsageSummary(
+        appName: 'Editor',
+        processName: 'editor.exe',
+        totalDurationSeconds: 600,
+        percentageOfTotal: 0,
+        launchCount: 2,
+      ),
+      AppUsageSummary(
+        appName: 'Browser',
+        processName: 'browser.exe',
+        totalDurationSeconds: 400,
+        percentageOfTotal: 0,
+        launchCount: 1,
+      ),
+    ]);
+    await dataSource.saveDailySummaries(DateTime(2026, 7, 12), const [
+      AppUsageSummary(
+        appName: 'Editor',
+        processName: 'editor.exe',
+        totalDurationSeconds: 900,
+        percentageOfTotal: 0,
+        launchCount: 3,
+      ),
+    ]);
+
+    final allTime = await dataSource.getAllTimeSummaries();
+
+    expect(allTime.map((summary) => summary.appName), ['Editor', 'Browser']);
+    expect(allTime.first.totalDurationSeconds, 1500);
+    expect(allTime.first.launchCount, 5);
+  });
 }

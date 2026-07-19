@@ -40,6 +40,9 @@ class _MemoryLocalDataSource implements FocusTraceLocalDataSource {
       const [];
 
   @override
+  Future<List<AppUsageSummary>> getAllTimeSummaries() async => const [];
+
+  @override
   Future<void> insertSession(UsageSession session) async {}
 
   @override

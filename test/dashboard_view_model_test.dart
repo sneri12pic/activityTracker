@@ -15,6 +15,14 @@ void main() {
             totalDurationSeconds: 600,
             percentageOfTotal: 1,
           ),
+        ]
+        ..allTimeResult = const [
+          AppUsageSummary(
+            appName: 'All-time leader',
+            packageName: 'example.leader',
+            totalDurationSeconds: 3600,
+            percentageOfTotal: 1,
+          ),
         ];
       final viewModel = DashboardViewModel(
         usageRepository: repository,
@@ -27,6 +35,7 @@ void main() {
       expect(viewModel.state.dayOffset, -1);
       expect(viewModel.state.hasUsageAccess, isFalse);
       expect(viewModel.state.summaries.single.appName, 'Yesterday app');
+      expect(viewModel.state.allTimeMostUsed?.appName, 'All-time leader');
     },
   );
 
@@ -74,6 +83,7 @@ class _DashboardUsageRepository implements UsageRepository {
 
   final bool _hasUsageAccess;
   List<AppUsageSummary> dailyResult = const [];
+  List<AppUsageSummary> allTimeResult = const [];
   List<Future<List<AppUsageSummary>>> dailyResults = const [];
   int _dailyCallCount = 0;
 
@@ -90,6 +100,9 @@ class _DashboardUsageRepository implements UsageRepository {
 
   @override
   Future<List<AppUsageSummary>> getTodaySummaries() async => const [];
+
+  @override
+  Future<List<AppUsageSummary>> getAllTimeSummaries() async => allTimeResult;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

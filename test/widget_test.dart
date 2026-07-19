@@ -33,6 +33,8 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Usage Bubbles'), findsOneWidget);
+    expect(find.text('Most used of all time'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('editor.exe'), findsNothing);
     expect(find.text('Launches: 3'), findsOneWidget);
@@ -125,6 +127,17 @@ class _FakeUsageRepository implements UsageRepository {
   @override
   Future<List<AppUsageSummary>> getDailySummaries(DateTime day) async =>
       const <AppUsageSummary>[];
+
+  @override
+  Future<List<AppUsageSummary>> getAllTimeSummaries() async => const [
+    AppUsageSummary(
+      appName: 'Archive',
+      processName: 'archive.exe',
+      totalDurationSeconds: 7200,
+      percentageOfTotal: 1,
+      launchCount: 5,
+    ),
+  ];
 
   @override
   Future<List<UsageSession>> topSessionsForApp(
