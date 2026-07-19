@@ -19,22 +19,22 @@ Ready-to-paste text for every form. Do these in order in https://play.google.com
 **Full description:**
 > FocusTrace helps you understand and control your screen time — without giving your data to anyone.
 >
-> 🔒 100% private, by design
+> 100% private, by design
 > • All data stays on your device. No account, no cloud, no ads, no analytics.
 > • The app makes zero network connections. Nothing is collected or shared, ever.
 > • Delete everything anytime with one tap.
 >
-> 📊 Understand your usage
+> Understand your usage
 > • Daily dashboard of your app usage and totals.
 > • Playful bubble chart that shows where your time really goes.
 > • Home-screen widgets for at-a-glance stats.
 >
-> ⏳ Take back control
+> Take back control
 > • Set daily limits for distracting apps.
 > • A gentle blocking overlay steps in when a limit is reached.
 > • Exclude apps you don't want tracked.
 >
-> 🌍 Available in English, Deutsch, Español, Français, Português (Brasil), 日本語, and Українська.
+> Available in English, Deutsch, Español, Français, Português (Brasil), 日本語, and Українська.
 >
 > FocusTrace asks for usage-access and display-over-apps permissions because measuring screen time and enforcing your limits is the app's entire purpose — the data those permissions expose never leaves your phone.
 
