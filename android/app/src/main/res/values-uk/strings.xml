@@ -18,6 +18,7 @@
     <string name="restriction_reason_block_now">Тимчасово заблоковано</string>
     <string name="restriction_reason_daily_limit">Денний ліміт вичерпано</string>
     <string name="restriction_reason_schedule">Заблоковано за розкладом</string>
+    <string name="restriction_reason_routine">Заблоковано активною рутиною</string>
     <string name="widget_title">Екранний час сьогодні</string>
     <string name="widget_bubbles_label">Бульбашки екранного часу</string>
     <string name="widget_no_access">Торкніться, щоб надати доступ до даних використання</string>

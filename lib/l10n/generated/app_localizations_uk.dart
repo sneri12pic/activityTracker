@@ -146,6 +146,48 @@ class AppLocalizationsUk extends AppLocalizations {
   String get restrictionsAddRestriction => 'Додати обмеження';
 
   @override
+  String get restrictionsAddRoutine => 'Нова рутина';
+
+  @override
+  String get restrictionsRoutinesTitle => 'Рутини блокування';
+
+  @override
+  String get restrictionsRoutinesEmptyTitle => 'Немає рутин блокування';
+
+  @override
+  String get restrictionsRoutinesEmptyBody =>
+      'Об’єднайте застосунки в рутину та вмикайте або вимикайте всю групу.';
+
+  @override
+  String get restrictionsIndividualRulesTitle => 'Окремі обмеження';
+
+  @override
+  String restrictionsRoutineAppCount(int count) {
+    return 'Застосунків: $count';
+  }
+
+  @override
+  String get restrictionsDeleteRoutine => 'Видалити рутину';
+
+  @override
+  String get routineEditorNewTitle => 'Нова рутина блокування';
+
+  @override
+  String get routineEditorEditTitle => 'Редагувати рутину блокування';
+
+  @override
+  String get routineEditorName => 'Назва рутини';
+
+  @override
+  String get routineEditorSearchApps => 'Пошук застосунків';
+
+  @override
+  String get routineEditorNoMatchingApps => 'Немає відповідних застосунків';
+
+  @override
+  String get routineEditorSave => 'Зберегти рутину';
+
+  @override
   String get restrictionsPlatformStatusTitle =>
       'На цій платформі — лише статус';
 

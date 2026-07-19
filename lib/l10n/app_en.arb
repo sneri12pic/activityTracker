@@ -62,6 +62,24 @@
   "restrictionsTitle": "Restrictions",
   "restrictionsSearchApps": "Search apps",
   "restrictionsAddRestriction": "Add restriction",
+  "restrictionsAddRoutine": "New routine",
+  "restrictionsRoutinesTitle": "Block routines",
+  "restrictionsRoutinesEmptyTitle": "No block routines",
+  "restrictionsRoutinesEmptyBody": "Group apps into a routine, then switch the whole group on or off.",
+  "restrictionsIndividualRulesTitle": "Individual restrictions",
+  "restrictionsRoutineAppCount": "{count} apps",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Delete routine",
+  "routineEditorNewTitle": "New block routine",
+  "routineEditorEditTitle": "Edit block routine",
+  "routineEditorName": "Routine name",
+  "routineEditorSearchApps": "Search apps",
+  "routineEditorNoMatchingApps": "No matching apps",
+  "routineEditorSave": "Save routine",
   "restrictionsPlatformStatusTitle": "Status only on this platform",
   "restrictionsPlatformStatusBody": "Rules are saved and shown here. Full-screen blocking currently runs only on Android.",
   "restrictionsEmptyTitle": "No app restrictions",

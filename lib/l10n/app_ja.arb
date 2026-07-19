@@ -62,6 +62,24 @@
   "restrictionsTitle": "制限",
   "restrictionsSearchApps": "アプリを検索",
   "restrictionsAddRestriction": "制限を追加",
+  "restrictionsAddRoutine": "新しいルーティン",
+  "restrictionsRoutinesTitle": "ブロックルーティン",
+  "restrictionsRoutinesEmptyTitle": "ブロックルーティンはありません",
+  "restrictionsRoutinesEmptyBody": "アプリをルーティンにまとめ、グループ全体をオンまたはオフにできます。",
+  "restrictionsIndividualRulesTitle": "個別の制限",
+  "restrictionsRoutineAppCount": "{count}個のアプリ",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "ルーティンを削除",
+  "routineEditorNewTitle": "新しいブロックルーティン",
+  "routineEditorEditTitle": "ブロックルーティンを編集",
+  "routineEditorName": "ルーティン名",
+  "routineEditorSearchApps": "アプリを検索",
+  "routineEditorNoMatchingApps": "一致するアプリはありません",
+  "routineEditorSave": "ルーティンを保存",
   "restrictionsPlatformStatusTitle": "このプラットフォームの状態のみ",
   "restrictionsPlatformStatusBody": "ルールは保存され、ここに表示されます。全画面ブロックは現在Androidでのみ動作します。",
   "restrictionsEmptyTitle": "アプリの制限はありません",

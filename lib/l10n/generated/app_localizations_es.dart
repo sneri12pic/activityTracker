@@ -149,6 +149,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restrictionsAddRestriction => 'Añadir restricción';
 
   @override
+  String get restrictionsAddRoutine => 'Nueva rutina';
+
+  @override
+  String get restrictionsRoutinesTitle => 'Rutinas de bloqueo';
+
+  @override
+  String get restrictionsRoutinesEmptyTitle => 'No hay rutinas de bloqueo';
+
+  @override
+  String get restrictionsRoutinesEmptyBody =>
+      'Agrupa aplicaciones en una rutina y activa o desactiva todo el grupo.';
+
+  @override
+  String get restrictionsIndividualRulesTitle => 'Restricciones individuales';
+
+  @override
+  String restrictionsRoutineAppCount(int count) {
+    return '$count aplicaciones';
+  }
+
+  @override
+  String get restrictionsDeleteRoutine => 'Eliminar rutina';
+
+  @override
+  String get routineEditorNewTitle => 'Nueva rutina de bloqueo';
+
+  @override
+  String get routineEditorEditTitle => 'Editar rutina de bloqueo';
+
+  @override
+  String get routineEditorName => 'Nombre de la rutina';
+
+  @override
+  String get routineEditorSearchApps => 'Buscar aplicaciones';
+
+  @override
+  String get routineEditorNoMatchingApps => 'No hay aplicaciones coincidentes';
+
+  @override
+  String get routineEditorSave => 'Guardar rutina';
+
+  @override
   String get restrictionsPlatformStatusTitle =>
       'Estado solo en esta plataforma';
 

@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/block_routine.dart';
 import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_session.dart';
 import '../localization/app_localizations_x.dart';
 import '../providers.dart';
 import 'restriction_editor_sheet.dart';
+import 'routine_editor_sheet.dart';
 
 class RestrictionsScreen extends ConsumerWidget {
   const RestrictionsScreen({super.key});
@@ -18,6 +20,9 @@ class RestrictionsScreen extends ConsumerWidget {
     final state = ref.watch(restrictionsViewModelProvider);
     final viewModel = ref.read(restrictionsViewModelProvider.notifier);
     final summaries = ref.watch(dashboardViewModelProvider).summaries;
+    final installedApps =
+        ref.watch(installedAppsProvider).valueOrNull ?? const [];
+    final routineCandidates = _mergeAppCandidates(summaries, installedApps);
     final usageByApp = {
       for (final summary in summaries) summary.appKey: summary,
     };
@@ -53,6 +58,12 @@ class RestrictionsScreen extends ConsumerWidget {
               icon: const Icon(Icons.search),
               label: Text(context.l10n.restrictionsAddRestriction),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _createRoutine(context, ref, routineCandidates),
+              icon: const Icon(Icons.playlist_add),
+              label: Text(context.l10n.restrictionsAddRoutine),
+            ),
             const SizedBox(height: 12),
             if (state.platform == UsagePlatform.android &&
                 !state.hasOverlayPermission) ...[
@@ -81,12 +92,43 @@ class RestrictionsScreen extends ConsumerWidget {
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (state.rules.isEmpty)
+            else if (state.rules.isEmpty && state.routines.isEmpty)
               _InfoCard(
                 title: context.l10n.restrictionsEmptyTitle,
                 body: context.l10n.restrictionsEmptyBody,
               )
-            else
+            else ...[
+              _SectionTitle(
+                title: context.l10n.restrictionsRoutinesTitle,
+                onAdd: () => _createRoutine(context, ref, routineCandidates),
+              ),
+              if (state.routines.isEmpty)
+                _InfoCard(
+                  title: context.l10n.restrictionsRoutinesEmptyTitle,
+                  body: context.l10n.restrictionsRoutinesEmptyBody,
+                )
+              else
+                for (final routine in state.routines)
+                  _RoutineTile(
+                    routine: routine,
+                    isSaving: state.isSaving,
+                    onToggle: (enabled) =>
+                        viewModel.setRoutineEnabled(routine, enabled),
+                    onTap: () =>
+                        _editRoutine(context, ref, routineCandidates, routine),
+                    onDelete: () => viewModel.deleteRoutine(routine.id),
+                  ),
+              const SizedBox(height: 14),
+              if (state.rules.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    context.l10n.restrictionsIndividualRulesTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               for (final rule in state.rules)
                 _RestrictionRuleTile(
                   rule: rule,
@@ -114,10 +156,57 @@ class RestrictionsScreen extends ConsumerWidget {
                   },
                   onDelete: () => viewModel.deleteRule(rule.appKey, rule.type),
                 ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  List<AppUsageSummary> _mergeAppCandidates(
+    List<AppUsageSummary> summaries,
+    List<AppUsageSummary> installedApps,
+  ) {
+    final byKey = <String, AppUsageSummary>{};
+    for (final app in installedApps) {
+      byKey[app.appKey] = app;
+    }
+    for (final app in summaries) {
+      byKey[app.appKey] = app;
+    }
+    return byKey.values.toList();
+  }
+
+  Future<void> _createRoutine(
+    BuildContext context,
+    WidgetRef ref,
+    List<AppUsageSummary> apps,
+  ) async {
+    final routine = await showRoutineEditor(context, apps: apps);
+    if (routine == null || !context.mounted) {
+      return;
+    }
+    await ref.read(restrictionsViewModelProvider.notifier).saveRoutine(routine);
+    if (context.mounted) {
+      await promptRestrictionPermissionsIfNeeded(context, ref);
+    }
+  }
+
+  Future<void> _editRoutine(
+    BuildContext context,
+    WidgetRef ref,
+    List<AppUsageSummary> apps,
+    BlockRoutine existing,
+  ) async {
+    final routine = await showRoutineEditor(
+      context,
+      apps: apps,
+      existing: existing,
+    );
+    if (routine == null || !context.mounted) {
+      return;
+    }
+    await ref.read(restrictionsViewModelProvider.notifier).saveRoutine(routine);
   }
 
   Future<void> _chooseAppAndCreateRule(
@@ -180,6 +269,86 @@ class RestrictionsScreen extends ConsumerWidget {
             first.appName.toLowerCase().compareTo(second.appName.toLowerCase()),
       );
     return candidates;
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, required this.onAdd});
+
+  final String title;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.restrictionsAddRoutine,
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoutineTile extends StatelessWidget {
+  const _RoutineTile({
+    required this.routine,
+    required this.isSaving,
+    required this.onToggle,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final BlockRoutine routine;
+  final bool isSaving;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final appNames = routine.apps.map((app) => app.appName).join(', ');
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        leading: const Icon(Icons.library_add_check_outlined),
+        title: Text(routine.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text(
+          '${context.l10n.restrictionsRoutineAppCount(routine.apps.length)} · $appNames',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        onTap: onTap,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Switch(
+              value: routine.isEnabled,
+              onChanged: isSaving ? null : onToggle,
+            ),
+            IconButton(
+              tooltip: context.l10n.restrictionsDeleteRoutine,
+              onPressed: isSaving ? null : onDelete,
+              icon: const Icon(Icons.delete_outline),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

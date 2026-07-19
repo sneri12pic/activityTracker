@@ -62,6 +62,24 @@
   "restrictionsTitle": "Restrictions",
   "restrictionsSearchApps": "Rechercher des applications",
   "restrictionsAddRestriction": "Ajouter une restriction",
+  "restrictionsAddRoutine": "Nouvelle routine",
+  "restrictionsRoutinesTitle": "Routines de blocage",
+  "restrictionsRoutinesEmptyTitle": "Aucune routine de blocage",
+  "restrictionsRoutinesEmptyBody": "Regroupez des apps dans une routine, puis activez ou désactivez tout le groupe.",
+  "restrictionsIndividualRulesTitle": "Restrictions individuelles",
+  "restrictionsRoutineAppCount": "{count} applications",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Supprimer la routine",
+  "routineEditorNewTitle": "Nouvelle routine de blocage",
+  "routineEditorEditTitle": "Modifier la routine de blocage",
+  "routineEditorName": "Nom de la routine",
+  "routineEditorSearchApps": "Rechercher des apps",
+  "routineEditorNoMatchingApps": "Aucune app correspondante",
+  "routineEditorSave": "Enregistrer la routine",
   "restrictionsPlatformStatusTitle": "État disponible uniquement sur cette plateforme",
   "restrictionsPlatformStatusBody": "Les règles sont enregistrées et affichées ici. Le blocage plein écran ne fonctionne actuellement que sur Android.",
   "restrictionsEmptyTitle": "Aucune restriction d’application",
