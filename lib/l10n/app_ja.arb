@@ -209,6 +209,29 @@
       "count": {"type": "int"}
     }
   },
+  "usageTrendDayShort": "日",
+  "usageTrendWeekShort": "週",
+  "usageTrendMonthShort": "月",
+  "usageTrendIncrease": "{period}: 使用時間が{percentage}%増加",
+  "@usageTrendIncrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendDecrease": "{period}: 使用時間が{percentage}%減少",
+  "@usageTrendDecrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendUnchanged": "{period}: 使用時間に変化なし",
+  "@usageTrendUnchanged": {
+    "placeholders": {
+      "period": {"type": "String"}
+    }
+  },
   "settingsTitle": "設定",
   "settingsPrivacyTitle": "プライバシー",
   "settingsPrivacyBody": "FocusTraceは使用状況データをこの端末内に保存します。追跡したアプリやウィンドウの使用状況をアップロードすることはありません。",

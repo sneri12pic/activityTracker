@@ -807,6 +807,42 @@ abstract class AppLocalizations {
   /// **'Launches: {count}'**
   String summaryLaunchCount(int count);
 
+  /// No description provided for @usageTrendDayShort.
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get usageTrendDayShort;
+
+  /// No description provided for @usageTrendWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get usageTrendWeekShort;
+
+  /// No description provided for @usageTrendMonthShort.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get usageTrendMonthShort;
+
+  /// No description provided for @usageTrendIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'{period}: usage increased by {percentage}%'**
+  String usageTrendIncrease(String period, int percentage);
+
+  /// No description provided for @usageTrendDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'{period}: usage decreased by {percentage}%'**
+  String usageTrendDecrease(String period, int percentage);
+
+  /// No description provided for @usageTrendUnchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{period}: usage unchanged'**
+  String usageTrendUnchanged(String period);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

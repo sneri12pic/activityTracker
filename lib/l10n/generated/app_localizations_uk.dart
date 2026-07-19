@@ -432,6 +432,30 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get usageTrendDayShort => 'Д';
+
+  @override
+  String get usageTrendWeekShort => 'Т';
+
+  @override
+  String get usageTrendMonthShort => 'М';
+
+  @override
+  String usageTrendIncrease(String period, int percentage) {
+    return '$period: використання зросло на $percentage%';
+  }
+
+  @override
+  String usageTrendDecrease(String period, int percentage) {
+    return '$period: використання зменшилося на $percentage%';
+  }
+
+  @override
+  String usageTrendUnchanged(String period) {
+    return '$period: використання без змін';
+  }
+
+  @override
   String get settingsTitle => 'Налаштування';
 
   @override

@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/usage_session.dart';
 
 abstract class FocusTraceLocalDataSource {
@@ -25,6 +26,12 @@ abstract class FocusTraceLocalDataSource {
 
   /// Aggregated per-app totals across every stored daily snapshot.
   Future<List<AppUsageSummary>> getAllTimeSummaries();
+
+  /// Stored per-app daily rows in the half-open date range.
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  );
 
   Future<String?> readSetting(String key);
 
@@ -269,6 +276,35 @@ ORDER BY duration_seconds DESC, app_name COLLATE NOCASE ASC
             totalDurationSeconds: row['duration_seconds'] as int,
             percentageOfTotal: 0,
             launchCount: row['launch_count'] as int? ?? 0,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<DailyAppUsage>> getUsageHistory(
+    DateTime fromInclusive,
+    DateTime toExclusive,
+  ) async {
+    final db = await _db;
+    final rows = await db.query(
+      'daily_app_usage',
+      where: 'day >= ? AND day < ?',
+      whereArgs: [_dayKey(fromInclusive), _dayKey(toExclusive)],
+      orderBy: 'day ASC, duration_seconds DESC',
+    );
+    return rows
+        .map(
+          (row) => DailyAppUsage(
+            day: DateTime.parse(row['day'] as String),
+            summary: AppUsageSummary(
+              appName: row['app_name'] as String,
+              packageName: row['package_name'] as String?,
+              processName: row['process_name'] as String?,
+              totalDurationSeconds: row['duration_seconds'] as int,
+              percentageOfTotal: 0,
+              launchCount: row['launch_count'] as int? ?? 0,
+            ),
           ),
         )
         .toList();

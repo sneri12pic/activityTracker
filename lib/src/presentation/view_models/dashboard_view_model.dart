@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/services/usage_aggregation_service.dart';
+import '../../application/services/usage_trend_service.dart';
 import '../../domain/models/app_usage_summary.dart';
+import '../../domain/models/daily_app_usage.dart';
 import '../../domain/models/usage_session.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../../domain/repositories/usage_repository.dart';
@@ -13,6 +15,7 @@ class DashboardState {
     required this.totalDurationSeconds,
     required this.hasUsageAccess,
     this.allTimeMostUsed,
+    this.trendsByAppKey = const <String, UsageTrend>{},
     this.dayOffset = 0,
     this.isLoading = false,
     this.errorMessage,
@@ -33,6 +36,7 @@ class DashboardState {
   final int totalDurationSeconds;
   final bool hasUsageAccess;
   final AppUsageSummary? allTimeMostUsed;
+  final Map<String, UsageTrend> trendsByAppKey;
 
   /// 0 = today, -1 = yesterday, and so on.
   final int dayOffset;
@@ -52,6 +56,7 @@ class DashboardState {
     bool? hasUsageAccess,
     AppUsageSummary? allTimeMostUsed,
     bool clearAllTimeMostUsed = false,
+    Map<String, UsageTrend>? trendsByAppKey,
     int? dayOffset,
     bool? isLoading,
     String? errorMessage,
@@ -65,6 +70,7 @@ class DashboardState {
       allTimeMostUsed: clearAllTimeMostUsed
           ? null
           : allTimeMostUsed ?? this.allTimeMostUsed,
+      trendsByAppKey: trendsByAppKey ?? this.trendsByAppKey,
       dayOffset: dayOffset ?? this.dayOffset,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
@@ -79,14 +85,17 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     required UsagePlatform platform,
     UsageAggregationService aggregationService =
         const UsageAggregationService(),
+    UsageTrendService trendService = const UsageTrendService(),
   }) : _usageRepository = usageRepository,
        _settingsRepository = settingsRepository,
        _aggregationService = aggregationService,
+       _trendService = trendService,
        super(DashboardState.initial(platform));
 
   final UsageRepository _usageRepository;
   final SettingsRepository _settingsRepository;
   final UsageAggregationService _aggregationService;
+  final UsageTrendService _trendService;
   int _loadGeneration = 0;
 
   Future<void> loadTodayUsage({bool showLoading = true}) async {
@@ -117,6 +126,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
           hasUsageAccess: false,
           allTimeMostUsed: allTimeMostUsed,
           clearAllTimeMostUsed: allTimeMostUsed == null,
+          trendsByAppKey: const <String, UsageTrend>{},
           isLoading: false,
         );
         return;
@@ -134,6 +144,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
             : const <String>{},
       );
       final allTimeMostUsed = await _loadAllTimeMostUsed(excludedApps);
+      final trendsByAppKey = await _loadUsageTrends(selectedDate, summaries);
       if (generation != _loadGeneration) {
         return;
       }
@@ -145,6 +156,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         hasUsageAccess: hasAccess,
         allTimeMostUsed: allTimeMostUsed,
         clearAllTimeMostUsed: allTimeMostUsed == null,
+        trendsByAppKey: trendsByAppKey,
         isLoading: false,
       );
     } catch (error) {
@@ -250,6 +262,29 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     } catch (_) {
       // This insight is best-effort and must not block the daily dashboard.
       return null;
+    }
+  }
+
+  Future<Map<String, UsageTrend>> _loadUsageTrends(
+    DateTime throughDay,
+    List<AppUsageSummary> summaries,
+  ) async {
+    if (summaries.isEmpty) {
+      return const <String, UsageTrend>{};
+    }
+    try {
+      final history = await _usageRepository.getUsageHistory(
+        throughDay.subtract(const Duration(days: 59)),
+        throughDay.add(const Duration(days: 1)),
+      );
+      return _trendService.calculate(
+        history: history,
+        throughDay: throughDay,
+        appKeys: summaries.map((summary) => summary.appKey),
+      );
+    } catch (_) {
+      // Trend badges are auxiliary and never block daily usage.
+      return const <String, UsageTrend>{};
     }
   }
 }

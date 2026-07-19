@@ -209,6 +209,29 @@
       "count": {"type": "int"}
     }
   },
+  "usageTrendDayShort": "D",
+  "usageTrendWeekShort": "S",
+  "usageTrendMonthShort": "M",
+  "usageTrendIncrease": "{period}: el uso aumentó un {percentage}%",
+  "@usageTrendIncrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendDecrease": "{period}: el uso disminuyó un {percentage}%",
+  "@usageTrendDecrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendUnchanged": "{period}: uso sin cambios",
+  "@usageTrendUnchanged": {
+    "placeholders": {
+      "period": {"type": "String"}
+    }
+  },
   "settingsTitle": "Ajustes",
   "settingsPrivacyTitle": "Privacidad",
   "settingsPrivacyBody": "FocusTrace almacena los datos de uso localmente en este dispositivo. No sube el uso registrado de aplicaciones ni ventanas.",

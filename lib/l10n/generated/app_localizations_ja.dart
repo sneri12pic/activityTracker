@@ -405,6 +405,30 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get usageTrendDayShort => '日';
+
+  @override
+  String get usageTrendWeekShort => '週';
+
+  @override
+  String get usageTrendMonthShort => '月';
+
+  @override
+  String usageTrendIncrease(String period, int percentage) {
+    return '$period: 使用時間が$percentage%増加';
+  }
+
+  @override
+  String usageTrendDecrease(String period, int percentage) {
+    return '$period: 使用時間が$percentage%減少';
+  }
+
+  @override
+  String usageTrendUnchanged(String period) {
+    return '$period: 使用時間に変化なし';
+  }
+
+  @override
   String get settingsTitle => '設定';
 
   @override

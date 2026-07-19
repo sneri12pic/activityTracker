@@ -209,6 +209,29 @@
       "count": {"type": "int"}
     }
   },
+  "usageTrendDayShort": "D",
+  "usageTrendWeekShort": "W",
+  "usageTrendMonthShort": "M",
+  "usageTrendIncrease": "{period}: usage increased by {percentage}%",
+  "@usageTrendIncrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendDecrease": "{period}: usage decreased by {percentage}%",
+  "@usageTrendDecrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendUnchanged": "{period}: usage unchanged",
+  "@usageTrendUnchanged": {
+    "placeholders": {
+      "period": {"type": "String"}
+    }
+  },
   "settingsTitle": "Settings",
   "settingsPrivacyTitle": "Privacy",
   "settingsPrivacyBody": "FocusTrace stores usage data locally on this device. It does not upload tracked app or window usage.",

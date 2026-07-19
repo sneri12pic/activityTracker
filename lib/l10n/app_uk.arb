@@ -209,6 +209,29 @@
       "count": {"type": "int"}
     }
   },
+  "usageTrendDayShort": "Д",
+  "usageTrendWeekShort": "Т",
+  "usageTrendMonthShort": "М",
+  "usageTrendIncrease": "{period}: використання зросло на {percentage}%",
+  "@usageTrendIncrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendDecrease": "{period}: використання зменшилося на {percentage}%",
+  "@usageTrendDecrease": {
+    "placeholders": {
+      "period": {"type": "String"},
+      "percentage": {"type": "int"}
+    }
+  },
+  "usageTrendUnchanged": "{period}: використання без змін",
+  "@usageTrendUnchanged": {
+    "placeholders": {
+      "period": {"type": "String"}
+    }
+  },
   "settingsTitle": "Налаштування",
   "settingsPrivacyTitle": "Конфіденційність",
   "settingsPrivacyBody": "FocusTrace зберігає дані про використання локально на цьому пристрої. Дані про відстежені застосунки чи вікна нікуди не надсилаються.",
