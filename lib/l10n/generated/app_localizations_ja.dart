@@ -397,6 +397,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String summaryLaunchCount(int count) {
+    return '起動回数: $count';
+  }
+
+  @override
   String get settingsTitle => '設定';
 
   @override

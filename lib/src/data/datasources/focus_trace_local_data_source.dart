@@ -56,10 +56,15 @@ class SqfliteFocusTraceLocalDataSource implements FocusTraceLocalDataSource {
     final opened = await factory.openDatabase(
       path,
       options: OpenDatabaseOptions(
-        version: 2,
+        version: 3,
         onUpgrade: (db, oldVersion, newVersion) async {
           if (oldVersion < 2) {
             await _createDailyUsageTable(db);
+          } else if (oldVersion < 3) {
+            await db.execute('''
+ALTER TABLE daily_app_usage
+ADD COLUMN launch_count INTEGER NOT NULL DEFAULT 0
+''');
           }
         },
         onCreate: (db, version) async {
@@ -112,6 +117,7 @@ CREATE TABLE daily_app_usage (
   package_name TEXT,
   process_name TEXT,
   duration_seconds INTEGER NOT NULL,
+  launch_count INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (day, app_key)
 )
 ''');
@@ -207,6 +213,7 @@ CREATE TABLE daily_app_usage (
           'package_name': summary.packageName,
           'process_name': summary.processName,
           'duration_seconds': summary.totalDurationSeconds,
+          'launch_count': summary.launchCount,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
@@ -229,6 +236,7 @@ CREATE TABLE daily_app_usage (
             processName: row['process_name'] as String?,
             totalDurationSeconds: row['duration_seconds'] as int,
             percentageOfTotal: 0,
+            launchCount: row['launch_count'] as int? ?? 0,
           ),
         )
         .toList();

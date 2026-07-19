@@ -202,6 +202,12 @@
       "category": {"type": "String"}
     }
   },
+  "summaryLaunchCount": "起動回数: {count}",
+  "@summaryLaunchCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "settingsTitle": "設定",
   "settingsPrivacyTitle": "プライバシー",
   "settingsPrivacyBody": "FocusTraceは使用状況データをこの端末内に保存します。追跡したアプリやウィンドウの使用状況をアップロードすることはありません。",

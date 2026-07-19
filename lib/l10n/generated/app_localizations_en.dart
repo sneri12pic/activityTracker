@@ -413,6 +413,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String summaryLaunchCount(int count) {
+    return 'Launches: $count';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

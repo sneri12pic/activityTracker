@@ -37,6 +37,7 @@ class UsageAggregationService {
 
       bucket
         ..totalDurationSeconds += durationSeconds
+        ..launchCount += 1
         ..lastUsedAt = _maxDate(bucket.lastUsedAt, clippedEnd);
     }
 
@@ -49,6 +50,7 @@ class UsageAggregationService {
                 processName: bucket.processName,
                 totalDurationSeconds: bucket.totalDurationSeconds,
                 percentageOfTotal: 0,
+                launchCount: bucket.launchCount,
                 lastUsedAt: bucket.lastUsedAt,
               ),
             )
@@ -95,6 +97,7 @@ class _UsageBucket {
   final String? packageName;
   final String? processName;
   int totalDurationSeconds = 0;
+  int launchCount = 0;
   DateTime? lastUsedAt;
 }
 

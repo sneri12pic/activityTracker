@@ -9,7 +9,23 @@ import java.util.Calendar
 
 /** Today's per-app foreground time, shared by MainActivity and the home widget. */
 object UsageStats {
-    data class AppUsage(val totalMs: Long, val lastUsedMs: Long)
+    data class AppUsage(
+        val totalMs: Long,
+        val lastUsedMs: Long,
+        val launchCount: Int,
+    )
+
+    internal enum class EventKind {
+        Foreground,
+        Background,
+        Other,
+    }
+
+    internal data class EventRecord(
+        val packageName: String,
+        val timeStampMs: Long,
+        val kind: EventKind,
+    )
 
     fun startOfTodayMillis(): Long = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
@@ -32,29 +48,79 @@ object UsageStats {
     ): Map<String, AppUsage> {
         val usageStatsManager =
             context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val records = buildList {
+            val events = usageStatsManager.queryEvents(fromMs, toMs)
+            val event = UsageEvents.Event()
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event)
+                val packageName = event.packageName ?: continue
+                add(
+                    EventRecord(
+                        packageName = packageName,
+                        timeStampMs = event.timeStamp,
+                        kind = when {
+                            isForegroundEvent(event.eventType) -> EventKind.Foreground
+                            isBackgroundEvent(event.eventType) -> EventKind.Background
+                            else -> EventKind.Other
+                        },
+                    )
+                )
+            }
+        }
+        return aggregateEvents(records, toMs, packageNames)
+    }
+
+    internal fun aggregateEvents(
+        events: Iterable<EventRecord>,
+        toMs: Long,
+        packageNames: Set<String>? = null,
+    ): Map<String, AppUsage> {
         val totals = HashMap<String, Long>()
         val foregroundSince = HashMap<String, Long>()
         val lastUsed = HashMap<String, Long>()
+        val lastBackground = HashMap<String, Long>()
+        val launches = HashMap<String, Int>()
+        var lastForegroundPackage: String? = null
 
-        val events = usageStatsManager.queryEvents(fromMs, toMs)
-        val event = UsageEvents.Event()
-        while (events.hasNextEvent()) {
-            events.getNextEvent(event)
-            val packageName = event.packageName ?: continue
-            if (packageNames != null && packageName !in packageNames) continue
-            if (isForegroundEvent(event.eventType)) {
-                // Some Android versions emit both the legacy MOVE event and
-                // ACTIVITY_RESUMED. Keep the first timestamp to avoid losing
-                // the beginning of the foreground interval.
-                foregroundSince.putIfAbsent(packageName, event.timeStamp)
-                lastUsed[packageName] = event.timeStamp
-            } else if (isBackgroundEvent(event.eventType)) {
-                val start = foregroundSince.remove(packageName)
-                if (start != null && event.timeStamp > start) {
-                    totals[packageName] =
-                        (totals[packageName] ?: 0L) + (event.timeStamp - start)
+        for (event in events) {
+            val packageName = event.packageName
+            val isRequested = packageNames == null || packageName in packageNames
+            when (event.kind) {
+                EventKind.Foreground -> {
+                    val isAlreadyForeground = foregroundSince.containsKey(packageName)
+                    val returnedAfterGap =
+                        lastBackground[packageName]?.let {
+                            event.timeStampMs - it >= MIN_RELAUNCH_GAP_MS
+                        } == true
+                    val isLaunch =
+                        !isAlreadyForeground &&
+                            (
+                                lastForegroundPackage != packageName ||
+                                    returnedAfterGap
+                                )
+                    lastForegroundPackage = packageName
+                    if (!isRequested) continue
+
+                    // Some Android versions emit both the legacy MOVE event and
+                    // ACTIVITY_RESUMED. Keep the first timestamp and count the
+                    // pair as one launch.
+                    foregroundSince.putIfAbsent(packageName, event.timeStampMs)
+                    if (isLaunch) {
+                        launches[packageName] = (launches[packageName] ?: 0) + 1
+                    }
+                    lastUsed[packageName] = event.timeStampMs
                 }
-                lastUsed[packageName] = event.timeStamp
+                EventKind.Background -> {
+                    if (!isRequested) continue
+                    lastBackground[packageName] = event.timeStampMs
+                    val start = foregroundSince.remove(packageName)
+                    if (start != null && event.timeStampMs > start) {
+                        totals[packageName] =
+                            (totals[packageName] ?: 0L) + (event.timeStampMs - start)
+                    }
+                    lastUsed[packageName] = event.timeStampMs
+                }
+                EventKind.Other -> Unit
             }
         }
 
@@ -69,7 +135,11 @@ object UsageStats {
         return totals
             .filterValues { it > 0L }
             .mapValues { (packageName, totalMs) ->
-                AppUsage(totalMs, lastUsed[packageName] ?: toMs)
+                AppUsage(
+                    totalMs = totalMs,
+                    lastUsedMs = lastUsed[packageName] ?: toMs,
+                    launchCount = launches[packageName] ?: 0,
+                )
             }
     }
 
@@ -119,4 +189,6 @@ object UsageStats {
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                 eventType == UsageEvents.Event.ACTIVITY_PAUSED)
     }
+
+    private const val MIN_RELAUNCH_GAP_MS = 1_000L
 }

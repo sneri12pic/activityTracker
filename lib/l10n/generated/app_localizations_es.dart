@@ -425,6 +425,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String summaryLaunchCount(int count) {
+    return 'Inicios: $count';
+  }
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override
