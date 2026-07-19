@@ -158,6 +158,7 @@ class AndroidUsageDataSource
       packageName: packageName,
       totalDurationSeconds: Duration(milliseconds: durationMs).inSeconds,
       percentageOfTotal: 0,
+      launchCount: (row['launchCount'] as num?)?.toInt() ?? 0,
       lastUsedAt: lastUsedMs == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastUsedMs),

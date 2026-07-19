@@ -207,6 +207,7 @@ class MainActivity : FlutterActivity() {
                     "appName" to appLabelFor(packageName),
                     "iconBytes" to appIconFor(packageName),
                     "totalTimeInForegroundMs" to usage.totalMs,
+                    "launchCount" to usage.launchCount,
                     "firstTimeStampMs" to startOfToday,
                     "lastTimeStampMs" to usage.lastUsedMs,
                     "lastTimeUsedMs" to usage.lastUsedMs

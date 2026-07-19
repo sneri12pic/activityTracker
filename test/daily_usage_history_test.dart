@@ -41,6 +41,7 @@ void main() {
         packageName: 'com.google.android.youtube',
         totalDurationSeconds: 900,
         percentageOfTotal: 0.75,
+        launchCount: 7,
       ),
       AppUsageSummary(
         appName: 'Chrome',
@@ -54,6 +55,7 @@ void main() {
     expect(stored, hasLength(2));
     expect(stored.first.appName, 'YouTube');
     expect(stored.first.totalDurationSeconds, 900);
+    expect(stored.first.launchCount, 7);
     expect(stored.last.appName, 'Chrome');
 
     // Other days stay untouched.

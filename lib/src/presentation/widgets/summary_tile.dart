@@ -78,11 +78,23 @@ class SummaryTile extends ConsumerWidget {
                     ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      summary.appName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          summary.appName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        if (summary.launchCount > 0)
+                          Text(
+                            context.l10n.summaryLaunchCount(
+                              summary.launchCount,
+                            ),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),

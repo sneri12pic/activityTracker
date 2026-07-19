@@ -202,6 +202,12 @@
       "category": {"type": "String"}
     }
   },
+  "summaryLaunchCount": "Aberturas: {count}",
+  "@summaryLaunchCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "settingsTitle": "Configurações",
   "settingsPrivacyTitle": "Privacidade",
   "settingsPrivacyBody": "O FocusTrace armazena os dados de uso localmente neste dispositivo. Ele não envia o uso rastreado de apps ou janelas.",

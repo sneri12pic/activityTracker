@@ -202,6 +202,12 @@
       "category": {"type": "String"}
     }
   },
+  "summaryLaunchCount": "Launches: {count}",
+  "@summaryLaunchCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "settingsTitle": "Settings",
   "settingsPrivacyTitle": "Privacy",
   "settingsPrivacyBody": "FocusTrace stores usage data locally on this device. It does not upload tracked app or window usage.",

@@ -35,6 +35,7 @@ void main() {
     expect(find.text('Usage Bubbles'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('editor.exe'), findsNothing);
+    expect(find.text('Launches: 3'), findsOneWidget);
     expect(find.text('1h 15m'), findsWidgets);
     expect(find.byIcon(Icons.settings), findsOneWidget);
 
@@ -116,6 +117,7 @@ class _FakeUsageRepository implements UsageRepository {
         processName: 'editor.exe',
         totalDurationSeconds: 4500,
         percentageOfTotal: 1,
+        launchCount: 3,
       ),
     ];
   }

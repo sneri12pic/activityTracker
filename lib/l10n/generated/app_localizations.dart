@@ -795,6 +795,12 @@ abstract class AppLocalizations {
   /// **'{appName}, {category}'**
   String usageBubbleSemanticsLabel(String appName, String category);
 
+  /// No description provided for @summaryLaunchCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Launches: {count}'**
+  String summaryLaunchCount(int count);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

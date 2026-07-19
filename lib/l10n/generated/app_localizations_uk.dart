@@ -423,6 +423,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String summaryLaunchCount(int count) {
+    return 'Запуски: $count';
+  }
+
+  @override
   String get settingsTitle => 'Налаштування';
 
   @override
