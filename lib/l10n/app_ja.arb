@@ -126,6 +126,7 @@
   "dashboardStartTracking": "追跡を開始",
   "dashboardNoUsageToday": "今日は使用記録がありません。",
   "dashboardNoUsageDay": "この日は使用記録がありません。",
+  "dashboardAllTimeMostUsedTitle": "最もよく使うアプリ",
   "dashboardUnsupportedPlatform": "FocusTrace MVPはAndroidとWindowsに対応しています。その他のプラットフォームは、独立したプラットフォームデータソースを通じて今後追加できます。",
   "commonRetry": "再試行",
   "commonUnexpectedError": "問題が発生しました。もう一度お試しください。",

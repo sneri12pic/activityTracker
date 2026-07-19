@@ -23,6 +23,9 @@ abstract class FocusTraceLocalDataSource {
   /// Stored per-app totals for [day], longest first. Icons are not persisted.
   Future<List<AppUsageSummary>> getDailySummaries(DateTime day);
 
+  /// Aggregated per-app totals across every stored daily snapshot.
+  Future<List<AppUsageSummary>> getAllTimeSummaries();
+
   Future<String?> readSetting(String key);
 
   Future<void> writeSetting(String key, String value);
@@ -228,6 +231,35 @@ CREATE TABLE daily_app_usage (
       whereArgs: [_dayKey(day)],
       orderBy: 'duration_seconds DESC',
     );
+    return rows
+        .map(
+          (row) => AppUsageSummary(
+            appName: row['app_name'] as String,
+            packageName: row['package_name'] as String?,
+            processName: row['process_name'] as String?,
+            totalDurationSeconds: row['duration_seconds'] as int,
+            percentageOfTotal: 0,
+            launchCount: row['launch_count'] as int? ?? 0,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<AppUsageSummary>> getAllTimeSummaries() async {
+    final db = await _db;
+    final rows = await db.rawQuery('''
+SELECT
+  app_key,
+  MAX(app_name) AS app_name,
+  MAX(package_name) AS package_name,
+  MAX(process_name) AS process_name,
+  SUM(duration_seconds) AS duration_seconds,
+  SUM(launch_count) AS launch_count
+FROM daily_app_usage
+GROUP BY app_key
+ORDER BY duration_seconds DESC, app_name COLLATE NOCASE ASC
+''');
     return rows
         .map(
           (row) => AppUsageSummary(

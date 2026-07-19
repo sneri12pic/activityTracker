@@ -573,6 +573,12 @@ abstract class AppLocalizations {
   /// **'No usage recorded for this day.'**
   String get dashboardNoUsageDay;
 
+  /// No description provided for @dashboardAllTimeMostUsedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Most used of all time'**
+  String get dashboardAllTimeMostUsedTitle;
+
   /// No description provided for @dashboardUnsupportedPlatform.
   ///
   /// In en, this message translates to:

@@ -282,6 +282,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dashboardNoUsageDay => 'За цей день використання не зафіксовано.';
 
   @override
+  String get dashboardAllTimeMostUsedTitle =>
+      'Найчастіше використовуваний застосунок';
+
+  @override
   String get dashboardUnsupportedPlatform =>
       'MVP FocusTrace підтримує Android і Windows. Інші платформи можна додати пізніше через ізольовані платформні джерела даних.';
 
