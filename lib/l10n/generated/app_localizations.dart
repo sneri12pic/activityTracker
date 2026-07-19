@@ -801,6 +801,12 @@ abstract class AppLocalizations {
   /// **'{appName}, {category}'**
   String usageBubbleSemanticsLabel(String appName, String category);
 
+  /// No description provided for @usageBubbleNearLimitSemanticsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName}, {category}, daily limit almost reached'**
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category);
+
   /// No description provided for @summaryLaunchCount.
   ///
   /// In en, this message translates to:

@@ -203,6 +203,13 @@
       "category": {"type": "String"}
     }
   },
+  "usageBubbleNearLimitSemanticsLabel": "{appName}、{category}、1日の上限にまもなく到達",
+  "@usageBubbleNearLimitSemanticsLabel": {
+    "placeholders": {
+      "appName": {"type": "String"},
+      "category": {"type": "String"}
+    }
+  },
   "summaryLaunchCount": "起動回数: {count}",
   "@summaryLaunchCount": {
     "placeholders": {

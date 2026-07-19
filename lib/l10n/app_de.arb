@@ -203,6 +203,13 @@
       "category": {"type": "String"}
     }
   },
+  "usageBubbleNearLimitSemanticsLabel": "{appName}, {category}, Tageslimit fast erreicht",
+  "@usageBubbleNearLimitSemanticsLabel": {
+    "placeholders": {
+      "appName": {"type": "String"},
+      "category": {"type": "String"}
+    }
+  },
   "summaryLaunchCount": "Starts: {count}",
   "@summaryLaunchCount": {
     "placeholders": {

@@ -400,6 +400,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category) {
+    return '$appName、$category、1日の上限にまもなく到達';
+  }
+
+  @override
   String summaryLaunchCount(int count) {
     return '起動回数: $count';
   }

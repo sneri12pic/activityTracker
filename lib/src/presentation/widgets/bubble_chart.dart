@@ -12,6 +12,7 @@ class BubbleChart extends StatefulWidget {
     required this.items,
     required this.selectedItem,
     required this.blockedItemIds,
+    required this.nearLimitItemIds,
     required this.onItemSelected,
     this.onItemLongPressed,
     required this.onSelectionDismissed,
@@ -21,6 +22,7 @@ class BubbleChart extends StatefulWidget {
   final List<UsageItem> items;
   final UsageItem? selectedItem;
   final Set<String> blockedItemIds;
+  final Set<String> nearLimitItemIds;
   final ValueChanged<UsageItem> onItemSelected;
   final ValueChanged<UsageItem>? onItemLongPressed;
   final VoidCallback onSelectionDismissed;
@@ -151,6 +153,8 @@ class _BubbleChartState extends State<BubbleChart>
                 radius: bubble.radius,
                 isSelected: bubble.item.id == widget.selectedItem?.id,
                 isBlocked: widget.blockedItemIds.contains(bubble.item.id),
+                isNearLimit: widget.nearLimitItemIds.contains(bubble.item.id),
+                warningAnimation: _pulseController,
                 onTap: () => _handleBubbleTap(bubble.item),
                 onLongPress: widget.onItemLongPressed == null
                     ? null

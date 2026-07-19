@@ -427,6 +427,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category) {
+    return '$appName, $category, денний ліміт майже вичерпано';
+  }
+
+  @override
   String summaryLaunchCount(int count) {
     return 'Запуски: $count';
   }

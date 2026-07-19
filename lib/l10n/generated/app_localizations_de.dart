@@ -424,6 +424,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category) {
+    return '$appName, $category, Tageslimit fast erreicht';
+  }
+
+  @override
   String summaryLaunchCount(int count) {
     return 'Starts: $count';
   }

@@ -39,6 +39,11 @@ void main() {
     expect(find.text('editor.exe'), findsNothing);
     expect(find.text('Launches: 3'), findsOneWidget);
     expect(find.text('D +50%'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Editor, Productivity, daily limit almost reached'),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.priority_high_rounded), findsOneWidget);
     expect(find.text('1h 15m'), findsWidgets);
     expect(find.byIcon(Icons.settings), findsOneWidget);
 
@@ -282,8 +287,13 @@ class _FakeSettingsRepository implements SettingsRepository {
   Future<int> trackingIntervalSeconds() async => _trackingIntervalSeconds;
 
   @override
-  Future<List<RestrictionRule>> restrictionRules() async =>
-      const <RestrictionRule>[];
+  Future<List<RestrictionRule>> restrictionRules() async => [
+    RestrictionRule.dailyLimit(
+      appKey: 'editor.exe',
+      appName: 'Editor',
+      limitMinutes: 80,
+    ),
+  ];
 
   @override
   Future<void> saveRestrictionRule(RestrictionRule rule) async {}
