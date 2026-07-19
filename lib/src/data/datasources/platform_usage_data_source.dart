@@ -38,7 +38,14 @@ abstract class PlatformUsageDataSource {
   Future<List<AppUsageSummary>> getInstalledApps();
 }
 
-class AndroidUsageDataSource implements PlatformUsageDataSource {
+abstract interface class AppMetadataDataSource {
+  /// Current metadata for the requested app keys. Missing/uninstalled apps are
+  /// omitted.
+  Future<List<AppUsageSummary>> getAppMetadata(Iterable<String> appKeys);
+}
+
+class AndroidUsageDataSource
+    implements PlatformUsageDataSource, AppMetadataDataSource {
   AndroidUsageDataSource({
     MethodChannel channel = const MethodChannel('focustrace/usage'),
   }) : _channel = channel;
@@ -92,6 +99,22 @@ class AndroidUsageDataSource implements PlatformUsageDataSource {
         .toList();
 
     return summaries;
+  }
+
+  @override
+  Future<List<AppUsageSummary>> getAppMetadata(Iterable<String> appKeys) async {
+    final requestedKeys = appKeys.toSet().toList(growable: false);
+    if (requestedKeys.isEmpty) {
+      return const <AppUsageSummary>[];
+    }
+    final rows = await _channel.invokeListMethod<Object?>(
+      'getAppMetadata',
+      requestedKeys,
+    );
+    return (rows ?? const <Object?>[])
+        .whereType<Map>()
+        .map((row) => _summaryFromAndroidMap(Map<String, Object?>.from(row)))
+        .toList();
   }
 
   @override

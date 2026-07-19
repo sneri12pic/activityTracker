@@ -48,6 +48,26 @@ class MainActivity : FlutterActivity() {
                         syncRestrictions(call.arguments as? String ?: "")
                         result.success(null)
                     }
+                    "getAppMetadata" -> {
+                        val packageNames = (call.arguments as? List<*>)
+                            ?.filterIsInstance<String>()
+                            .orEmpty()
+                        Thread {
+                            try {
+                                val apps = getAppMetadata(packageNames)
+                                runOnUiThread { result.success(apps) }
+                            } catch (e: Exception) {
+                                Log.e(LOG_TAG, "getAppMetadata failed", e)
+                                runOnUiThread {
+                                    result.error(
+                                        "APP_METADATA_FAILED",
+                                        e.message,
+                                        null
+                                    )
+                                }
+                            }
+                        }.start()
+                    }
                     "getInstalledApps" -> {
                         // Icon encoding for every launchable app is too slow
                         // for the main thread.
@@ -197,6 +217,24 @@ class MainActivity : FlutterActivity() {
 
     private fun isUserFacingApp(packageName: String): Boolean {
         return UsageStats.isUserFacingApp(this, packageName)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getAppMetadata(
+        packageNames: List<String>
+    ): List<Map<String, Any?>> {
+        return packageNames.distinct().mapNotNull { pkg ->
+            try {
+                packageManager.getApplicationInfo(pkg, 0)
+                mapOf(
+                    "packageName" to pkg,
+                    "appName" to appLabelFor(pkg),
+                    "iconBytes" to appIconFor(pkg)
+                )
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            }
+        }
     }
 
     /** All launchable apps: popular apps first, then the rest by label. */

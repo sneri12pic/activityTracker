@@ -48,9 +48,36 @@ class UsageRepositoryImpl implements UsageRepository {
 
   @override
   Future<List<AppUsageSummary>> getDailySummaries(DateTime day) async {
-    return _aggregationService.withPercentages(
-      await _localDataSource.getDailySummaries(day),
-    );
+    final stored = await _localDataSource.getDailySummaries(day);
+    if (_platform != UsagePlatform.android || stored.isEmpty) {
+      return _aggregationService.withPercentages(stored);
+    }
+
+    if (_platformDataSource is! AppMetadataDataSource) {
+      return _aggregationService.withPercentages(stored);
+    }
+    final metadataDataSource = _platformDataSource as AppMetadataDataSource;
+
+    try {
+      final metadata = await metadataDataSource.getAppMetadata(
+        stored.map((summary) => summary.appKey),
+      );
+      final metadataByKey = {
+        for (final summary in metadata) summary.appKey: summary,
+      };
+      return _aggregationService.withPercentages(
+        stored.map((summary) {
+          final current = metadataByKey[summary.appKey];
+          if (current?.iconBytes == null) {
+            return summary;
+          }
+          return summary.copyWith(iconBytes: current!.iconBytes);
+        }),
+      );
+    } catch (_) {
+      // Historical totals stay useful even when package metadata lookup fails.
+      return _aggregationService.withPercentages(stored);
+    }
   }
 
   Future<List<AppUsageSummary>> _fetchTodaySummaries() async {
