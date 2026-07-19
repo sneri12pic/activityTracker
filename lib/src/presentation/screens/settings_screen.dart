@@ -194,9 +194,13 @@ class SettingsScreen extends ConsumerWidget {
                 for (final language in AppLanguage.values)
                   RadioListTile<AppLanguage>(
                     value: language,
+                    // ponytail: RadioGroup migration needs Flutter >=3.35;
+                    // local SDK is 3.32. Drop these ignores after upgrading.
+                    // ignore: deprecated_member_use
                     groupValue: currentLanguage,
                     title: Text(_languageName(dialogContext, language)),
                     controlAffinity: ListTileControlAffinity.trailing,
+                    // ignore: deprecated_member_use
                     onChanged: (selection) {
                       Navigator.of(dialogContext).pop(selection);
                     },
