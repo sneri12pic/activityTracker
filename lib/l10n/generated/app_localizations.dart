@@ -957,6 +957,18 @@ abstract class AppLocalizations {
   /// **'No yesterday comparison yet'**
   String get usageDetailsNoYesterdayComparison;
 
+  /// No description provided for @usageDetailsRankLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'#{rank} most used'**
+  String usageDetailsRankLabel(int rank);
+
+  /// No description provided for @usageDetailsRankLead.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} more than {appName}'**
+  String usageDetailsRankLead(String duration, String appName);
+
   /// No description provided for @usageDetailsDayValue.
   ///
   /// In en, this message translates to:

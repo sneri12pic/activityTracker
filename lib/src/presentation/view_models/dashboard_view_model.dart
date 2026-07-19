@@ -14,7 +14,7 @@ class DashboardState {
     required this.summaries,
     required this.totalDurationSeconds,
     required this.hasUsageAccess,
-    this.allTimeMostUsed,
+    this.allTimeTopApps = const <AppUsageSummary>[],
     this.trendsByAppKey = const <String, UsageTrend>{},
     this.dayOffset = 0,
     this.isLoading = false,
@@ -35,7 +35,7 @@ class DashboardState {
   final List<AppUsageSummary> summaries;
   final int totalDurationSeconds;
   final bool hasUsageAccess;
-  final AppUsageSummary? allTimeMostUsed;
+  final List<AppUsageSummary> allTimeTopApps;
   final Map<String, UsageTrend> trendsByAppKey;
 
   /// 0 = today, -1 = yesterday, and so on.
@@ -54,8 +54,7 @@ class DashboardState {
     List<AppUsageSummary>? summaries,
     int? totalDurationSeconds,
     bool? hasUsageAccess,
-    AppUsageSummary? allTimeMostUsed,
-    bool clearAllTimeMostUsed = false,
+    List<AppUsageSummary>? allTimeTopApps,
     Map<String, UsageTrend>? trendsByAppKey,
     int? dayOffset,
     bool? isLoading,
@@ -67,9 +66,7 @@ class DashboardState {
       summaries: summaries ?? this.summaries,
       totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
       hasUsageAccess: hasUsageAccess ?? this.hasUsageAccess,
-      allTimeMostUsed: clearAllTimeMostUsed
-          ? null
-          : allTimeMostUsed ?? this.allTimeMostUsed,
+      allTimeTopApps: allTimeTopApps ?? this.allTimeTopApps,
       trendsByAppKey: trendsByAppKey ?? this.trendsByAppKey,
       dayOffset: dayOffset ?? this.dayOffset,
       isLoading: isLoading ?? this.isLoading,
@@ -116,7 +113,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
       }
       if (state.platform == UsagePlatform.android && isToday && !hasAccess) {
         final excludedApps = await _settingsRepository.excludedApps();
-        final allTimeMostUsed = await _loadAllTimeMostUsed(excludedApps);
+        final allTimeTopApps = await _loadAllTimeTopApps(excludedApps);
         if (generation != _loadGeneration) {
           return;
         }
@@ -124,8 +121,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
           summaries: const <AppUsageSummary>[],
           totalDurationSeconds: 0,
           hasUsageAccess: false,
-          allTimeMostUsed: allTimeMostUsed,
-          clearAllTimeMostUsed: allTimeMostUsed == null,
+          allTimeTopApps: allTimeTopApps,
           trendsByAppKey: const <String, UsageTrend>{},
           isLoading: false,
         );
@@ -143,7 +139,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
             ? await _settingsRepository.hiddenAppsForToday()
             : const <String>{},
       );
-      final allTimeMostUsed = await _loadAllTimeMostUsed(excludedApps);
+      final allTimeTopApps = await _loadAllTimeTopApps(excludedApps);
       final trendsByAppKey = await _loadUsageTrends(selectedDate, summaries);
       if (generation != _loadGeneration) {
         return;
@@ -154,8 +150,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
           summaries,
         ),
         hasUsageAccess: hasAccess,
-        allTimeMostUsed: allTimeMostUsed,
-        clearAllTimeMostUsed: allTimeMostUsed == null,
+        allTimeTopApps: allTimeTopApps,
         trendsByAppKey: trendsByAppKey,
         isLoading: false,
       );
@@ -249,7 +244,7 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
     return _aggregationService.withPercentages(visible);
   }
 
-  Future<AppUsageSummary?> _loadAllTimeMostUsed(
+  Future<List<AppUsageSummary>> _loadAllTimeTopApps(
     List<String> excludedApps,
   ) async {
     try {
@@ -258,10 +253,10 @@ class DashboardViewModel extends StateNotifier<DashboardState> {
         excludedApps,
         const <String>{},
       );
-      return visible.isEmpty ? null : visible.first;
+      return visible.take(3).toList();
     } catch (_) {
       // This insight is best-effort and must not block the daily dashboard.
-      return null;
+      return const <AppUsageSummary>[];
     }
   }
 

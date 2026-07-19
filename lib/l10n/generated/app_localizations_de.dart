@@ -520,6 +520,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Noch kein Vergleich mit gestern';
 
   @override
+  String usageDetailsRankLabel(int rank) {
+    return 'Platz $rank der meistgenutzten Apps';
+  }
+
+  @override
+  String usageDetailsRankLead(String duration, String appName) {
+    return '$duration mehr als $appName';
+  }
+
+  @override
   String usageDetailsDayValue(String date, String duration) {
     return '$date: $duration';
   }

@@ -19,7 +19,9 @@ class RestrictionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(restrictionsViewModelProvider);
     final viewModel = ref.read(restrictionsViewModelProvider.notifier);
-    final summaries = ref.watch(dashboardViewModelProvider).summaries;
+    final dashboardState = ref.watch(dashboardViewModelProvider);
+    final summaries = dashboardState.summaries;
+    final topApps = dashboardState.allTimeTopApps;
     final installedApps =
         ref.watch(installedAppsProvider).valueOrNull ?? const [];
     final routineCandidates = _mergeAppCandidates(summaries, installedApps);
@@ -48,6 +50,13 @@ class RestrictionsScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (topApps.isNotEmpty) ...[
+              _TopUsedCard(
+                apps: topApps,
+                onAppTap: (app) => _createRuleForApp(context, ref, app),
+              ),
+              const SizedBox(height: 12),
+            ],
             FilledButton.icon(
               onPressed: () => _chooseAppAndCreateRule(
                 context,
@@ -209,6 +218,25 @@ class RestrictionsScreen extends ConsumerWidget {
     await ref.read(restrictionsViewModelProvider.notifier).saveRoutine(routine);
   }
 
+  Future<void> _createRuleForApp(
+    BuildContext context,
+    WidgetRef ref,
+    AppUsageSummary app,
+  ) async {
+    final rule = await showRestrictionEditor(
+      context,
+      appKey: app.appKey,
+      appName: app.appName,
+    );
+    if (rule == null || !context.mounted) {
+      return;
+    }
+    await ref.read(restrictionsViewModelProvider.notifier).saveRule(rule);
+    if (context.mounted) {
+      await promptRestrictionPermissionsIfNeeded(context, ref);
+    }
+  }
+
   Future<void> _chooseAppAndCreateRule(
     BuildContext context,
     WidgetRef ref, {
@@ -269,6 +297,104 @@ class RestrictionsScreen extends ConsumerWidget {
             first.appName.toLowerCase().compareTo(second.appName.toLowerCase()),
       );
     return candidates;
+  }
+}
+
+class _TopUsedCard extends StatelessWidget {
+  const _TopUsedCard({required this.apps, required this.onAppTap});
+
+  final List<AppUsageSummary> apps;
+  final ValueChanged<AppUsageSummary> onAppTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Text(
+                context.l10n.dashboardAllTimeMostUsedTitle,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            for (var index = 0; index < apps.length; index++)
+              ListTile(
+                dense: true,
+                onTap: () => onAppTap(apps[index]),
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        '#${index + 1}',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    _SummaryIcon(summary: apps[index]),
+                  ],
+                ),
+                title: Text(
+                  apps[index].appName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                trailing: Text(
+                  context.l10n.compactDuration(apps[index].totalDuration),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryIcon extends StatelessWidget {
+  const _SummaryIcon({required this.summary});
+
+  final AppUsageSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconBytes = summary.iconBytes;
+    if (iconBytes != null) {
+      return ClipOval(
+        child: Image.memory(
+          iconBytes,
+          width: 32,
+          height: 32,
+          cacheWidth: 96,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        ),
+      );
+    }
+    return CircleAvatar(
+      radius: 16,
+      child: Text(
+        summary.appName.isEmpty ? '?' : summary.appName[0].toUpperCase(),
+      ),
+    );
   }
 }
 

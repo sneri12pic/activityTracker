@@ -144,6 +144,13 @@ class SummaryTile extends ConsumerWidget {
 
   Future<void> _openUsageDetails(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.read(dashboardViewModelProvider);
+    // Summaries arrive sorted by usage, so the list index is the day's rank.
+    final summaries = dashboardState.summaries;
+    final index = summaries.indexWhere((item) => item.appKey == summary.appKey);
+    final isTopThree = index >= 0 && index < 3;
+    final runnerUp = isTopThree && index + 1 < summaries.length
+        ? summaries[index + 1]
+        : null;
     return Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (context) => UsageDetailsScreen(
@@ -151,6 +158,12 @@ class SummaryTile extends ConsumerWidget {
             summary: summary,
             selectedDate: dashboardState.selectedDate,
             platform: dashboardState.platform,
+            rank: isTopThree ? index + 1 : null,
+            runnerUpName: runnerUp?.appName,
+            leadSeconds: runnerUp == null
+                ? null
+                : summary.totalDurationSeconds -
+                      runnerUp.totalDurationSeconds,
           ),
         ),
       ),

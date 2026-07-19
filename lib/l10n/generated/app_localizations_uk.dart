@@ -522,6 +522,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get usageDetailsNoYesterdayComparison => 'Порівняння з учора ще немає';
 
   @override
+  String usageDetailsRankLabel(int rank) {
+    return '№$rank за використанням';
+  }
+
+  @override
+  String usageDetailsRankLead(String duration, String appName) {
+    return 'на $duration більше, ніж $appName';
+  }
+
+  @override
   String usageDetailsDayValue(String date, String duration) {
     return '$date: $duration';
   }

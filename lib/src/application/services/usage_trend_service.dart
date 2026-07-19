@@ -64,11 +64,10 @@ class UsageTrendService {
       }
     }
 
-    if (current == 0 && previous == 0) {
-      return null;
-    }
+    // No prior-window usage means there is nothing to compare against, so a
+    // first-seen app shows no badge instead of a misleading +100%.
     if (previous == 0) {
-      return 100;
+      return null;
     }
     return (current - previous) / previous * 100;
   }

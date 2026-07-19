@@ -23,7 +23,7 @@ void main() {
     expect(trend.monthChangePercent, 50);
   });
 
-  test('uses a finite new-usage value and leaves empty apps without data', () {
+  test('shows no trend for first-seen usage or empty apps', () {
     const service = UsageTrendService();
     final throughDay = DateTime(2026, 7, 19);
 
@@ -33,7 +33,8 @@ void main() {
       appKeys: const ['example.app', 'empty.app'],
     );
 
-    expect(trends['example.app']!.dayChangePercent, 100);
+    // No prior-window usage means no badge instead of a misleading +100%.
+    expect(trends['example.app']!.hasData, isFalse);
     expect(trends['empty.app']!.hasData, isFalse);
   });
 }

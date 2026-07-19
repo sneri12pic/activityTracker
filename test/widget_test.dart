@@ -33,8 +33,6 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Usage Bubbles'), findsOneWidget);
-    expect(find.text('Most used of all time'), findsOneWidget);
-    expect(find.text('Archive'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('editor.exe'), findsNothing);
     expect(find.text('Launches: 3'), findsOneWidget);
@@ -46,6 +44,18 @@ void main() {
     expect(find.byIcon(Icons.priority_high_rounded), findsOneWidget);
     expect(find.text('1h 15m'), findsWidgets);
     expect(find.byIcon(Icons.settings), findsOneWidget);
+
+    // The all-time top apps card now lives on the restrictions screen.
+    await tester.tap(find.byIcon(Icons.lock_outline));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Most used of all time'), findsOneWidget);
+    expect(find.text('#1'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.home));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byType(UsageBubble));
     await tester.pump(const Duration(milliseconds: 500));
@@ -65,6 +75,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Last 7 days'), findsOneWidget);
+    expect(find.text('#1 most used'), findsOneWidget);
     expect(find.text('50% more than yesterday'), findsOneWidget);
   });
 

@@ -33,6 +33,10 @@ class UsageDetailsScreen extends ConsumerWidget {
                 children: [
                   _AppSummaryHeader(request: request),
                   const SizedBox(height: 12),
+                  if (request.rank != null) ...[
+                    _RankBadge(request: request),
+                    const SizedBox(height: 8),
+                  ],
                   _ComparisonBadge(
                     changePercent: state.changeFromYesterdayPercent,
                   ),
@@ -153,6 +157,55 @@ class _AppSummaryHeader extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// `#1 most used · 2h 5m more than YouTube` for the day's top 3 apps.
+class _RankBadge extends StatelessWidget {
+  const _RankBadge({required this.request});
+
+  final AppUsageDetailsRequest request;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.primary;
+    final runnerUpName = request.runnerUpName;
+    final leadSeconds = request.leadSeconds;
+    var text = context.l10n.usageDetailsRankLabel(request.rank!);
+    if (runnerUpName != null && leadSeconds != null && leadSeconds > 0) {
+      text +=
+          ' · ${context.l10n.usageDetailsRankLead(context.l10n.compactDuration(Duration(seconds: leadSeconds)), runnerUpName)}';
+    }
+
+    return Semantics(
+      label: text,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Icon(Icons.emoji_events_outlined, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

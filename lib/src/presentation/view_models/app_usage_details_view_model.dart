@@ -9,22 +9,42 @@ class AppUsageDetailsRequest {
     required this.summary,
     required this.selectedDate,
     required this.platform,
+    this.rank,
+    this.runnerUpName,
+    this.leadSeconds,
   });
 
   final AppUsageSummary summary;
   final DateTime selectedDate;
   final UsagePlatform platform;
 
+  /// 1-based place among the day's apps; only set for the top 3.
+  final int? rank;
+
+  /// The next-placed app's name and how far ahead this app is, when known.
+  final String? runnerUpName;
+  final int? leadSeconds;
+
   @override
   bool operator ==(Object other) {
     return other is AppUsageDetailsRequest &&
         other.summary == summary &&
         other.selectedDate == selectedDate &&
-        other.platform == platform;
+        other.platform == platform &&
+        other.rank == rank &&
+        other.runnerUpName == runnerUpName &&
+        other.leadSeconds == leadSeconds;
   }
 
   @override
-  int get hashCode => Object.hash(summary, selectedDate, platform);
+  int get hashCode => Object.hash(
+    summary,
+    selectedDate,
+    platform,
+    rank,
+    runnerUpName,
+    leadSeconds,
+  );
 }
 
 class DailyUsagePoint {
@@ -114,11 +134,9 @@ class AppUsageDetailsViewModel extends StateNotifier<AppUsageDetailsState> {
   }
 
   double? _changePercent(int current, int previous) {
-    if (current == 0 && previous == 0) {
-      return null;
-    }
+    // No yesterday usage means there is nothing to compare against.
     if (previous == 0) {
-      return 100;
+      return null;
     }
     return (current - previous) / previous * 100;
   }

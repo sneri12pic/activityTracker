@@ -495,6 +495,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get usageDetailsNoYesterdayComparison => '昨日との比較はまだありません';
 
   @override
+  String usageDetailsRankLabel(int rank) {
+    return '利用時間第$rank位';
+  }
+
+  @override
+  String usageDetailsRankLead(String duration, String appName) {
+    return '$appNameより$duration多い';
+  }
+
+  @override
   String usageDetailsDayValue(String date, String duration) {
     return '$date: $duration';
   }

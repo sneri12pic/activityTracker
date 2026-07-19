@@ -272,6 +272,19 @@
   },
   "usageDetailsSameAsYesterday": "Same as yesterday",
   "usageDetailsNoYesterdayComparison": "No yesterday comparison yet",
+  "usageDetailsRankLabel": "#{rank} most used",
+  "@usageDetailsRankLabel": {
+    "placeholders": {
+      "rank": {"type": "int"}
+    }
+  },
+  "usageDetailsRankLead": "{duration} more than {appName}",
+  "@usageDetailsRankLead": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "appName": {"type": "String"}
+    }
+  },
   "usageDetailsDayValue": "{date}: {duration}",
   "@usageDetailsDayValue": {
     "placeholders": {

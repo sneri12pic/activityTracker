@@ -57,7 +57,7 @@ void main() {
       expect(viewModel.state.dayOffset, -1);
       expect(viewModel.state.hasUsageAccess, isFalse);
       expect(viewModel.state.summaries.single.appName, 'Yesterday app');
-      expect(viewModel.state.allTimeMostUsed?.appName, 'All-time leader');
+      expect(viewModel.state.allTimeTopApps.first.appName, 'All-time leader');
       expect(
         viewModel.state.trendsByAppKey['example.yesterday']?.dayChangePercent,
         50,
