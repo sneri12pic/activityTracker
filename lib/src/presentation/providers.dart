@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/services/usage_aggregation_service.dart';
 import '../data/datasources/focus_trace_local_data_source.dart';
+import '../data/datasources/platform_locale_data_source.dart';
 import '../data/datasources/platform_usage_data_source.dart';
+import '../data/repositories/app_language_repository_impl.dart';
 import '../data/repositories/settings_repository_impl.dart';
 import '../data/repositories/usage_repository_impl.dart';
+import '../domain/models/app_usage_summary.dart';
 import '../domain/models/usage_session.dart';
+import '../domain/repositories/app_language_repository.dart';
 import '../domain/repositories/settings_repository.dart';
 import '../domain/repositories/usage_repository.dart';
+import 'view_models/app_language_view_model.dart';
 import 'view_models/dashboard_view_model.dart';
 import 'view_models/onboarding_view_model.dart';
 import 'view_models/restrictions_view_model.dart';
@@ -40,6 +45,29 @@ final localDataSourceProvider = Provider<FocusTraceLocalDataSource>(
   (ref) => SqfliteFocusTraceLocalDataSource(),
 );
 
+final appLanguageRepositoryProvider = Provider<AppLanguageRepository>(
+  (ref) => AppLanguageRepositoryImpl(ref.watch(localDataSourceProvider)),
+);
+
+final platformLocaleDataSourceProvider = Provider<PlatformLocaleDataSource>((
+  ref,
+) {
+  if (ref.watch(usagePlatformProvider) == UsagePlatform.android) {
+    return AndroidPlatformLocaleDataSource();
+  }
+  return const NoOpPlatformLocaleDataSource();
+});
+
+final appLanguageViewModelProvider =
+    StateNotifierProvider<AppLanguageViewModel, AppLanguageState>((ref) {
+      final viewModel = AppLanguageViewModel(
+        repository: ref.watch(appLanguageRepositoryProvider),
+        platformLocaleDataSource: ref.watch(platformLocaleDataSourceProvider),
+      );
+      viewModel.load();
+      return viewModel;
+    });
+
 final platformDataSourceProvider = Provider<PlatformUsageDataSource>((ref) {
   switch (ref.watch(usagePlatformProvider)) {
     case UsagePlatform.android:
@@ -51,6 +79,18 @@ final platformDataSourceProvider = Provider<PlatformUsageDataSource>((ref) {
     case UsagePlatform.linux:
     case UsagePlatform.unsupported:
       return const UnsupportedPlatformUsageDataSource();
+  }
+});
+
+final installedAppsProvider = FutureProvider<List<AppUsageSummary>>((
+  ref,
+) async {
+  try {
+    return await ref.watch(platformDataSourceProvider).getInstalledApps();
+  } catch (error) {
+    // Decorative/auxiliary data: fall back to an empty list, never block UI.
+    debugPrint('getInstalledApps failed: $error');
+    return const [];
   }
 });
 

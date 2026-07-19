@@ -8,6 +8,10 @@ abstract class UsageRepository {
 
   Future<List<AppUsageSummary>> getTodaySummaries();
 
+  /// Per-app totals stored for [day] (snapshotted whenever today's usage is
+  /// fetched), longest first. Empty when nothing was recorded that day.
+  Future<List<AppUsageSummary>> getDailySummaries(DateTime day);
+
   /// The longest recorded sessions for [appKey] on [date], longest first.
   /// Returns an empty list on platforms without local session storage.
   Future<List<UsageSession>> topSessionsForApp(

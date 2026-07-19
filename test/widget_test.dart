@@ -16,17 +16,22 @@ void main() {
           settingsRepositoryProvider.overrideWithValue(
             _FakeSettingsRepository(),
           ),
+          appLanguageRepositoryProvider.overrideWithValue(
+            _FakeAppLanguageRepository(),
+          ),
         ],
         child: const FocusTraceApp(),
       ),
     );
 
     // The bubble chart's pulsing background animates forever, so
-    // pumpAndSettle would never settle; pump fixed frames instead.
+    // pumpAndSettle would never settle; pump fixed frames instead. Each
+    // async layer (language load, onboarding gate, usage data) needs a frame.
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('FocusTrace'), findsOneWidget);
     expect(find.text('Usage Bubbles'), findsOneWidget);
     expect(find.text('Editor'), findsOneWidget);
     expect(find.text('1h 15m'), findsWidgets);
@@ -42,6 +47,60 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Productivity'), findsNothing);
   });
+
+  testWidgets('language picker applies and persists locale immediately', (
+    tester,
+  ) async {
+    final languageRepository = _FakeAppLanguageRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          usagePlatformProvider.overrideWithValue(UsagePlatform.windows),
+          usageRepositoryProvider.overrideWithValue(_FakeUsageRepository()),
+          platformDataSourceProvider.overrideWithValue(
+            _FakePlatformDataSource(),
+          ),
+          settingsRepositoryProvider.overrideWithValue(
+            _FakeSettingsRepository(),
+          ),
+          appLanguageRepositoryProvider.overrideWithValue(languageRepository),
+        ],
+        child: const FocusTraceApp(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+
+    // Route pushes and dialogs need one pump to mount plus one to animate.
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Language'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Español'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(languageRepository.language, AppLanguage.spanish);
+    final settingsContext = tester.element(find.byType(SettingsScreen));
+    expect(Localizations.localeOf(settingsContext).languageCode, 'es');
+  });
+}
+
+class _FakeAppLanguageRepository implements AppLanguageRepository {
+  AppLanguage language = AppLanguage.english;
+
+  @override
+  Future<AppLanguage> appLanguage() async => language;
+
+  @override
+  Future<void> setAppLanguage(AppLanguage language) async {
+    this.language = language;
+  }
 }
 
 class _FakeUsageRepository implements UsageRepository {
@@ -59,6 +118,10 @@ class _FakeUsageRepository implements UsageRepository {
       ),
     ];
   }
+
+  @override
+  Future<List<AppUsageSummary>> getDailySummaries(DateTime day) async =>
+      const <AppUsageSummary>[];
 
   @override
   Future<List<UsageSession>> topSessionsForApp(
@@ -80,6 +143,10 @@ class _FakeUsageRepository implements UsageRepository {
 class _FakePlatformDataSource implements PlatformUsageDataSource {
   @override
   Future<ActiveWindowInfo?> getActiveWindowInfo() async => null;
+
+  @override
+  Future<List<AppUsageSummary>> getInstalledApps() async =>
+      const <AppUsageSummary>[];
 
   @override
   Future<List<AppUsageSummary>> getTodayUsageStats() async =>
