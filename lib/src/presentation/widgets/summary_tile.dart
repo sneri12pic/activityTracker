@@ -162,8 +162,7 @@ class SummaryTile extends ConsumerWidget {
             runnerUpName: runnerUp?.appName,
             leadSeconds: runnerUp == null
                 ? null
-                : summary.totalDurationSeconds -
-                      runnerUp.totalDurationSeconds,
+                : summary.totalDurationSeconds - runnerUp.totalDurationSeconds,
           ),
         ),
       ),
