@@ -203,6 +203,13 @@
       "category": {"type": "String"}
     }
   },
+  "usageBubbleNearLimitSemanticsLabel": "{appName}, {category}, limite diário quase atingido",
+  "@usageBubbleNearLimitSemanticsLabel": {
+    "placeholders": {
+      "appName": {"type": "String"},
+      "category": {"type": "String"}
+    }
+  },
   "summaryLaunchCount": "Aberturas: {count}",
   "@summaryLaunchCount": {
     "placeholders": {

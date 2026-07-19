@@ -421,6 +421,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category) {
+    return '$appName, $category, limite diário quase atingido';
+  }
+
+  @override
   String summaryLaunchCount(int count) {
     return 'Aberturas: $count';
   }

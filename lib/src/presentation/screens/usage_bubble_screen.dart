@@ -43,6 +43,13 @@ class UsageBubbleScreen extends ConsumerWidget {
             ))
           summary.appKey,
     };
+    final nearLimitItemIds = isToday
+        ? viewModel.nearLimitItemIds(
+            summaries: summaries,
+            rules: restrictionState.rules,
+            now: now,
+          )
+        : const <String>{};
 
     return Theme(
       data: ThemeData(
@@ -79,6 +86,7 @@ class UsageBubbleScreen extends ConsumerWidget {
                     items: items,
                     selectedItem: selectedItem,
                     blockedItemIds: blockedItemIds,
+                    nearLimitItemIds: nearLimitItemIds,
                     onItemSelected: viewModel.selectItem,
                     onItemLongPressed: isToday
                         ? (item) => _showBubbleActions(

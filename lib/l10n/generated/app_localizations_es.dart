@@ -428,6 +428,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String usageBubbleNearLimitSemanticsLabel(String appName, String category) {
+    return '$appName, $category, límite diario casi alcanzado';
+  }
+
+  @override
   String summaryLaunchCount(int count) {
     return 'Inicios: $count';
   }
