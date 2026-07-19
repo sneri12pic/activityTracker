@@ -6,6 +6,15 @@ class _FakeSettingsRepository implements SettingsRepository {
   final List<RestrictionRule> rules = <RestrictionRule>[];
 
   @override
+  Future<List<BlockRoutine>> blockRoutines() async => const [];
+
+  @override
+  Future<void> saveBlockRoutine(BlockRoutine routine) async {}
+
+  @override
+  Future<void> removeBlockRoutine(String id) async {}
+
+  @override
   Future<void> addExcludedApp(String appKey) async {}
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasources/platform_usage_data_source.dart';
+import '../../domain/models/block_routine.dart';
 import '../../domain/models/restriction_rule.dart';
 import '../../domain/models/usage_session.dart';
 import '../../domain/repositories/settings_repository.dart';
@@ -9,6 +10,7 @@ class RestrictionsState {
   const RestrictionsState({
     required this.platform,
     this.rules = const <RestrictionRule>[],
+    this.routines = const <BlockRoutine>[],
     this.hasOverlayPermission = true,
     this.isLoading = false,
     this.isSaving = false,
@@ -25,6 +27,7 @@ class RestrictionsState {
 
   final UsagePlatform platform;
   final List<RestrictionRule> rules;
+  final List<BlockRoutine> routines;
   final bool hasOverlayPermission;
   final bool isLoading;
   final bool isSaving;
@@ -32,6 +35,7 @@ class RestrictionsState {
 
   RestrictionsState copyWith({
     List<RestrictionRule>? rules,
+    List<BlockRoutine>? routines,
     bool? hasOverlayPermission,
     bool? isLoading,
     bool? isSaving,
@@ -41,6 +45,7 @@ class RestrictionsState {
     return RestrictionsState(
       platform: platform,
       rules: rules ?? this.rules,
+      routines: routines ?? this.routines,
       hasOverlayPermission: hasOverlayPermission ?? this.hasOverlayPermission,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
@@ -64,15 +69,19 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final rules = await _settingsRepository.restrictionRules();
+      final (rules, routines) = await (
+        _settingsRepository.restrictionRules(),
+        _settingsRepository.blockRoutines(),
+      ).wait;
       final hasOverlayPermission = await _platformDataSource
           .hasOverlayPermission();
       state = state.copyWith(
         rules: rules,
+        routines: routines,
         hasOverlayPermission: hasOverlayPermission,
         isLoading: false,
       );
-      await _sync(rules);
+      await _sync(rules, routines);
     } catch (error) {
       state = state.copyWith(isLoading: false, errorMessage: error.toString());
     }
@@ -90,7 +99,7 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
         hasOverlayPermission: hasOverlayPermission,
         isSaving: false,
       );
-      await _sync(rules);
+      await _sync(rules, state.routines);
     } catch (error) {
       state = state.copyWith(isSaving: false, errorMessage: error.toString());
     }
@@ -108,7 +117,7 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
         hasOverlayPermission: hasOverlayPermission,
         isSaving: false,
       );
-      await _sync(rules);
+      await _sync(rules, state.routines);
     } catch (error) {
       state = state.copyWith(isSaving: false, errorMessage: error.toString());
     }
@@ -139,7 +148,7 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
         hasOverlayPermission: hasOverlayPermission,
         isSaving: false,
       );
-      await _sync(rules);
+      await _sync(rules, state.routines);
     } catch (error) {
       state = state.copyWith(isSaving: false, errorMessage: error.toString());
     }
@@ -157,10 +166,40 @@ class RestrictionsViewModel extends StateNotifier<RestrictionsState> {
     final hasOverlayPermission = await _platformDataSource
         .hasOverlayPermission();
     state = state.copyWith(hasOverlayPermission: hasOverlayPermission);
-    await _sync(state.rules);
+    await _sync(state.rules, state.routines);
   }
 
-  Future<void> _sync(List<RestrictionRule> rules) {
-    return _platformDataSource.syncRestrictions(encodeRules(rules));
+  Future<void> saveRoutine(BlockRoutine routine) async {
+    state = state.copyWith(isSaving: true, clearError: true);
+    try {
+      await _settingsRepository.saveBlockRoutine(routine);
+      final routines = await _settingsRepository.blockRoutines();
+      state = state.copyWith(routines: routines, isSaving: false);
+      await _sync(state.rules, routines);
+    } catch (error) {
+      state = state.copyWith(isSaving: false, errorMessage: error.toString());
+    }
+  }
+
+  Future<void> setRoutineEnabled(BlockRoutine routine, bool isEnabled) {
+    return saveRoutine(routine.copyWith(isEnabled: isEnabled));
+  }
+
+  Future<void> deleteRoutine(String id) async {
+    state = state.copyWith(isSaving: true, clearError: true);
+    try {
+      await _settingsRepository.removeBlockRoutine(id);
+      final routines = await _settingsRepository.blockRoutines();
+      state = state.copyWith(routines: routines, isSaving: false);
+      await _sync(state.rules, routines);
+    } catch (error) {
+      state = state.copyWith(isSaving: false, errorMessage: error.toString());
+    }
+  }
+
+  Future<void> _sync(List<RestrictionRule> rules, List<BlockRoutine> routines) {
+    return _platformDataSource.syncRestrictions(
+      encodeRestrictionConfiguration(rules, routines),
+    );
   }
 }

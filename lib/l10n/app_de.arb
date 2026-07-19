@@ -62,6 +62,24 @@
   "restrictionsTitle": "Einschränkungen",
   "restrictionsSearchApps": "Apps suchen",
   "restrictionsAddRestriction": "Einschränkung hinzufügen",
+  "restrictionsAddRoutine": "Neue Routine",
+  "restrictionsRoutinesTitle": "Sperrroutinen",
+  "restrictionsRoutinesEmptyTitle": "Keine Sperrroutinen",
+  "restrictionsRoutinesEmptyBody": "Gruppiere Apps in einer Routine und schalte die ganze Gruppe ein oder aus.",
+  "restrictionsIndividualRulesTitle": "Einzelne Einschränkungen",
+  "restrictionsRoutineAppCount": "{count} Apps",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Routine löschen",
+  "routineEditorNewTitle": "Neue Sperrroutine",
+  "routineEditorEditTitle": "Sperrroutine bearbeiten",
+  "routineEditorName": "Name der Routine",
+  "routineEditorSearchApps": "Apps suchen",
+  "routineEditorNoMatchingApps": "Keine passenden Apps",
+  "routineEditorSave": "Routine speichern",
   "restrictionsPlatformStatusTitle": "Status nur auf dieser Plattform",
   "restrictionsPlatformStatusBody": "Regeln werden hier gespeichert und angezeigt. Die Vollbildsperre funktioniert derzeit nur unter Android.",
   "restrictionsEmptyTitle": "Keine App-Einschränkungen",

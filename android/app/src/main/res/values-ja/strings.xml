@@ -15,6 +15,7 @@
     <string name="restriction_reason_block_now">一時的にブロック中</string>
     <string name="restriction_reason_daily_limit">1日の上限に達しました</string>
     <string name="restriction_reason_schedule">スケジュールによりブロック中</string>
+    <string name="restriction_reason_routine">有効なルーティンによりブロック中</string>
     <string name="widget_title">今日のスクリーンタイム</string>
     <string name="widget_bubbles_label">スクリーンタイムバブル</string>
     <string name="widget_no_access">タップして使用状況へのアクセスを許可</string>

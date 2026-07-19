@@ -62,6 +62,24 @@
   "restrictionsTitle": "Обмеження",
   "restrictionsSearchApps": "Пошук застосунків",
   "restrictionsAddRestriction": "Додати обмеження",
+  "restrictionsAddRoutine": "Нова рутина",
+  "restrictionsRoutinesTitle": "Рутини блокування",
+  "restrictionsRoutinesEmptyTitle": "Немає рутин блокування",
+  "restrictionsRoutinesEmptyBody": "Об’єднайте застосунки в рутину та вмикайте або вимикайте всю групу.",
+  "restrictionsIndividualRulesTitle": "Окремі обмеження",
+  "restrictionsRoutineAppCount": "Застосунків: {count}",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Видалити рутину",
+  "routineEditorNewTitle": "Нова рутина блокування",
+  "routineEditorEditTitle": "Редагувати рутину блокування",
+  "routineEditorName": "Назва рутини",
+  "routineEditorSearchApps": "Пошук застосунків",
+  "routineEditorNoMatchingApps": "Немає відповідних застосунків",
+  "routineEditorSave": "Зберегти рутину",
   "restrictionsPlatformStatusTitle": "На цій платформі — лише статус",
   "restrictionsPlatformStatusBody": "Правила зберігаються та відображаються тут. Повноекранне блокування наразі працює лише на Android.",
   "restrictionsEmptyTitle": "Немає обмежень застосунків",

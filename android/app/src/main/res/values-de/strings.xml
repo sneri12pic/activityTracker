@@ -16,6 +16,7 @@
     <string name="restriction_reason_block_now">Vorübergehend gesperrt</string>
     <string name="restriction_reason_daily_limit">Tageslimit erreicht</string>
     <string name="restriction_reason_schedule">Nach Zeitplan gesperrt</string>
+    <string name="restriction_reason_routine">Durch eine aktive Routine gesperrt</string>
     <string name="widget_title">Bildschirmzeit heute</string>
     <string name="widget_bubbles_label">Bildschirmzeit-Blasen</string>
     <string name="widget_no_access">Tippen, um Nutzungszugriff zu erteilen</string>

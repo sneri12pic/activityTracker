@@ -62,6 +62,24 @@
   "restrictionsTitle": "Restricciones",
   "restrictionsSearchApps": "Buscar aplicaciones",
   "restrictionsAddRestriction": "Añadir restricción",
+  "restrictionsAddRoutine": "Nueva rutina",
+  "restrictionsRoutinesTitle": "Rutinas de bloqueo",
+  "restrictionsRoutinesEmptyTitle": "No hay rutinas de bloqueo",
+  "restrictionsRoutinesEmptyBody": "Agrupa aplicaciones en una rutina y activa o desactiva todo el grupo.",
+  "restrictionsIndividualRulesTitle": "Restricciones individuales",
+  "restrictionsRoutineAppCount": "{count} aplicaciones",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Eliminar rutina",
+  "routineEditorNewTitle": "Nueva rutina de bloqueo",
+  "routineEditorEditTitle": "Editar rutina de bloqueo",
+  "routineEditorName": "Nombre de la rutina",
+  "routineEditorSearchApps": "Buscar aplicaciones",
+  "routineEditorNoMatchingApps": "No hay aplicaciones coincidentes",
+  "routineEditorSave": "Guardar rutina",
   "restrictionsPlatformStatusTitle": "Estado solo en esta plataforma",
   "restrictionsPlatformStatusBody": "Las reglas se guardan y se muestran aquí. Actualmente, el bloqueo a pantalla completa solo funciona en Android.",
   "restrictionsEmptyTitle": "No hay restricciones de aplicaciones",

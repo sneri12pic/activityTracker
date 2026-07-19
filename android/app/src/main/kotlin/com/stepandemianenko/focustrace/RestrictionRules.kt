@@ -7,7 +7,8 @@ import java.util.Calendar
 enum class RestrictionRuleType(val jsonName: String) {
     BlockNow("blockNow"),
     DailyLimit("dailyLimit"),
-    Schedule("schedule");
+    Schedule("schedule"),
+    RoutineBlock("routineBlock");
 
     companion object {
         fun fromJsonName(value: String?): RestrictionRuleType? {
@@ -35,9 +36,13 @@ object RestrictionRules {
         return try {
             val root = JSONObject(json)
             val rules = root.optJSONArray("rules") ?: JSONArray()
+            val routineBlocks = root.optJSONArray("routineBlocks") ?: JSONArray()
             buildList {
                 for (index in 0 until rules.length()) {
                     parseRule(rules.optJSONObject(index))?.let(::add)
+                }
+                for (index in 0 until routineBlocks.length()) {
+                    parseRoutineBlock(routineBlocks.optJSONObject(index))?.let(::add)
                 }
             }
         } catch (_: Exception) {
@@ -56,6 +61,7 @@ object RestrictionRules {
                 usageSecondsToday >= limit * 60L
             }
             RestrictionRuleType.Schedule -> isScheduleActive(rule, nowMs)
+            RestrictionRuleType.RoutineBlock -> true
         }
     }
 
@@ -69,6 +75,7 @@ object RestrictionRules {
             RestrictionRuleType.BlockNow -> rule.untilMs
             RestrictionRuleType.DailyLimit -> startOfTomorrow(nowMs)
             RestrictionRuleType.Schedule -> scheduleEndMs(rule, nowMs)
+            RestrictionRuleType.RoutineBlock -> null
         }
     }
 
@@ -92,6 +99,7 @@ object RestrictionRules {
                     return null
                 }
             }
+            RestrictionRuleType.RoutineBlock -> Unit
         }
 
         return RestrictionRule(
@@ -102,6 +110,17 @@ object RestrictionRules {
             limitMinutes = limitMinutes,
             startMinute = startMinute,
             endMinute = endMinute,
+        )
+    }
+
+    private fun parseRoutineBlock(row: JSONObject?): RestrictionRule? {
+        if (row == null) return null
+        val appKey = row.optString("appKey").takeIf { it.isNotBlank() } ?: return null
+        val appName = row.optString("appName").takeIf { it.isNotBlank() } ?: return null
+        return RestrictionRule(
+            appKey = appKey,
+            appName = appName,
+            type = RestrictionRuleType.RoutineBlock,
         )
     }
 

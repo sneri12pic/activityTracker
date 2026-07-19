@@ -16,6 +16,7 @@
     <string name="restriction_reason_block_now">Bloqueado por enquanto</string>
     <string name="restriction_reason_daily_limit">Limite diário atingido</string>
     <string name="restriction_reason_schedule">Bloqueado pelo horário</string>
+    <string name="restriction_reason_routine">Bloqueado por uma rotina ativa</string>
     <string name="widget_title">Tempo de tela hoje</string>
     <string name="widget_bubbles_label">Bolhas de tempo de tela</string>
     <string name="widget_no_access">Toque para conceder acesso aos dados de uso</string>

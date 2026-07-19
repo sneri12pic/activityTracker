@@ -400,6 +400,10 @@ class BlockerService : Service() {
                 this,
                 R.string.restriction_reason_schedule,
             )
+            RestrictionRuleType.RoutineBlock -> FocusTraceLocale.getString(
+                this,
+                R.string.restriction_reason_routine,
+            )
         }
     }
 

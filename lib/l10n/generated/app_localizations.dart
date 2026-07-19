@@ -348,6 +348,84 @@ abstract class AppLocalizations {
   /// **'Add restriction'**
   String get restrictionsAddRestriction;
 
+  /// No description provided for @restrictionsAddRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'New routine'**
+  String get restrictionsAddRoutine;
+
+  /// No description provided for @restrictionsRoutinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block routines'**
+  String get restrictionsRoutinesTitle;
+
+  /// No description provided for @restrictionsRoutinesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No block routines'**
+  String get restrictionsRoutinesEmptyTitle;
+
+  /// No description provided for @restrictionsRoutinesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Group apps into a routine, then switch the whole group on or off.'**
+  String get restrictionsRoutinesEmptyBody;
+
+  /// No description provided for @restrictionsIndividualRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual restrictions'**
+  String get restrictionsIndividualRulesTitle;
+
+  /// No description provided for @restrictionsRoutineAppCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} apps'**
+  String restrictionsRoutineAppCount(int count);
+
+  /// No description provided for @restrictionsDeleteRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete routine'**
+  String get restrictionsDeleteRoutine;
+
+  /// No description provided for @routineEditorNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New block routine'**
+  String get routineEditorNewTitle;
+
+  /// No description provided for @routineEditorEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit block routine'**
+  String get routineEditorEditTitle;
+
+  /// No description provided for @routineEditorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine name'**
+  String get routineEditorName;
+
+  /// No description provided for @routineEditorSearchApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Search apps'**
+  String get routineEditorSearchApps;
+
+  /// No description provided for @routineEditorNoMatchingApps.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching apps'**
+  String get routineEditorNoMatchingApps;
+
+  /// No description provided for @routineEditorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save routine'**
+  String get routineEditorSave;
+
   /// No description provided for @restrictionsPlatformStatusTitle.
   ///
   /// In en, this message translates to:

@@ -240,6 +240,15 @@ class _FakeSettingsRepository implements SettingsRepository {
   bool _onboardingCompleted = true;
 
   @override
+  Future<List<BlockRoutine>> blockRoutines() async => const [];
+
+  @override
+  Future<void> saveBlockRoutine(BlockRoutine routine) async {}
+
+  @override
+  Future<void> removeBlockRoutine(String id) async {}
+
+  @override
   Future<List<String>> excludedApps() async => List.of(_excludedApps);
 
   @override

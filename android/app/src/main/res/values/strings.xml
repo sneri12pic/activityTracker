@@ -16,6 +16,7 @@
     <string name="restriction_reason_block_now">Blocked for now</string>
     <string name="restriction_reason_daily_limit">Daily limit reached</string>
     <string name="restriction_reason_schedule">Blocked by schedule</string>
+    <string name="restriction_reason_routine">Blocked by an active routine</string>
     <string name="widget_title">Screen time today</string>
     <string name="widget_bubbles_label">Screen time bubbles</string>
     <string name="widget_no_access">Tap to grant usage access</string>

@@ -62,6 +62,24 @@
   "restrictionsTitle": "Restrições",
   "restrictionsSearchApps": "Buscar apps",
   "restrictionsAddRestriction": "Adicionar restrição",
+  "restrictionsAddRoutine": "Nova rotina",
+  "restrictionsRoutinesTitle": "Rotinas de bloqueio",
+  "restrictionsRoutinesEmptyTitle": "Nenhuma rotina de bloqueio",
+  "restrictionsRoutinesEmptyBody": "Agrupe apps em uma rotina e ative ou desative o grupo inteiro.",
+  "restrictionsIndividualRulesTitle": "Restrições individuais",
+  "restrictionsRoutineAppCount": "{count} apps",
+  "@restrictionsRoutineAppCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "restrictionsDeleteRoutine": "Excluir rotina",
+  "routineEditorNewTitle": "Nova rotina de bloqueio",
+  "routineEditorEditTitle": "Editar rotina de bloqueio",
+  "routineEditorName": "Nome da rotina",
+  "routineEditorSearchApps": "Buscar apps",
+  "routineEditorNoMatchingApps": "Nenhum app correspondente",
+  "routineEditorSave": "Salvar rotina",
   "restrictionsPlatformStatusTitle": "Status somente nesta plataforma",
   "restrictionsPlatformStatusBody": "As regras são salvas e exibidas aqui. No momento, o bloqueio em tela cheia funciona apenas no Android.",
   "restrictionsEmptyTitle": "Nenhuma restrição de app",

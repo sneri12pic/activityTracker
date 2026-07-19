@@ -141,6 +141,48 @@ class AppLocalizationsJa extends AppLocalizations {
   String get restrictionsAddRestriction => '制限を追加';
 
   @override
+  String get restrictionsAddRoutine => '新しいルーティン';
+
+  @override
+  String get restrictionsRoutinesTitle => 'ブロックルーティン';
+
+  @override
+  String get restrictionsRoutinesEmptyTitle => 'ブロックルーティンはありません';
+
+  @override
+  String get restrictionsRoutinesEmptyBody =>
+      'アプリをルーティンにまとめ、グループ全体をオンまたはオフにできます。';
+
+  @override
+  String get restrictionsIndividualRulesTitle => '個別の制限';
+
+  @override
+  String restrictionsRoutineAppCount(int count) {
+    return '$count個のアプリ';
+  }
+
+  @override
+  String get restrictionsDeleteRoutine => 'ルーティンを削除';
+
+  @override
+  String get routineEditorNewTitle => '新しいブロックルーティン';
+
+  @override
+  String get routineEditorEditTitle => 'ブロックルーティンを編集';
+
+  @override
+  String get routineEditorName => 'ルーティン名';
+
+  @override
+  String get routineEditorSearchApps => 'アプリを検索';
+
+  @override
+  String get routineEditorNoMatchingApps => '一致するアプリはありません';
+
+  @override
+  String get routineEditorSave => 'ルーティンを保存';
+
+  @override
   String get restrictionsPlatformStatusTitle => 'このプラットフォームの状態のみ';
 
   @override

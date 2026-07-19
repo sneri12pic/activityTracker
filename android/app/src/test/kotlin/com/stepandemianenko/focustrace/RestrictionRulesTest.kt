@@ -93,6 +93,30 @@ class RestrictionRulesTest {
         assertTrue(RestrictionRules.parseRules("not json").isEmpty())
     }
 
+    @Test
+    fun enabledRoutinePayloadCreatesAlwaysBlockingRules() {
+        val json = """
+            {
+              "version": 2,
+              "rules": [],
+              "routineBlocks": [
+                {"appKey":"com.example.social","appName":"Social"}
+              ]
+            }
+        """.trimIndent()
+
+        val rules = RestrictionRules.parseRules(json)
+
+        assertEquals(1, rules.size)
+        assertEquals(RestrictionRuleType.RoutineBlock, rules.single().type)
+        assertTrue(RestrictionRules.isBlocked(rules.single(), localMs(2026, 7, 4, 12, 0), 0))
+        assertEquals(null, RestrictionRules.blockedUntilMs(
+            rules.single(),
+            localMs(2026, 7, 4, 12, 0),
+            0,
+        ))
+    }
+
     private fun localMs(
         year: Int,
         month: Int,
